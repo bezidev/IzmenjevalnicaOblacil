@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'head.jinja' %}
+    <script src="/static/js/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .shared-width {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .shared-height {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    {% include 'navbar.jinja' %}
+    <h1>Urejate izdelek</h1>
+    <h3>Splošni podatki o izdelku</h3>
+    <form method="POST">
+        <input type="text" name="name" placeholder="Ime izdelka" aria-label="Ime izdelka" value="{{ product.name }}" required>
+        <div class="shared-width">
+            <select name="category" aria-label="Izberite kategorijo" required>
+                <option value="hat" {% if product.category == "hat" %}selected{% endif %}>🧢 Kapa</option>
+                <option value="sunglasses" {% if product.category == "sunglasses" %}selected{% endif %}>🕶️ Sončna očala</option>
+                <option value="men-shirts" {% if product.category == "men-shirts" %}selected{% endif %}>👕 Moške majice</option>
+                <option value="women-shirts" {% if product.category == "women-shirts" %}selected{% endif %}>👚 Ženske majice</option>
+                <option value="men-pants" {% if product.category == "men-pants" %}selected{% endif %}>👖 Moške hlače</option>
+                <option value="women-pants" {% if product.category == "women-pants" %}selected{% endif %}>👖 Ženske hlače</option>
+                <option value="men-shoes" {% if product.category == "men-shoes" %}selected{% endif %}>👞 Moški čevlji</option>
+                <option value="women-shoes" {% if product.category == "women-shoes" %}selected{% endif %}>🥿 Ženski čevlji</option>
+            </select>
+            {% if product.category == "men-shirts" or product.category == "women-shirts" or product.category == "men-pants" or product.category == "women-pants" %}
+                <div style="width: 5px;"></div>
+                <select name="size" aria-label="Izberite velikost">
+                    <option value="">Izberite velikost</option>
+                    <option {% if product.size == "XXS" %}selected{% endif %}>XXS</option>
+                    <option {% if product.size == "XS" %}selected{% endif %}>XS</option>
+                    <option {% if product.size == "S" %}selected{% endif %}>S</option>
+                    <option {% if product.size == "M" %}selected{% endif %}>M</option>
+                    <option {% if product.size == "L" %}selected{% endif %}>L</option>
+                    <option {% if product.size == "XL" %}selected{% endif %}>XL</option>
+                    <option {% if product.size == "XXL" %}selected{% endif %}>XXL</option>
+                </select>
+            {% elif product.category == "men-shoes" or product.category == "women-shoes" %}
+                <div style="width: 5px;"></div>
+                <input type="number" name="size" placeholder="Vpišite velikost (številko)" aria-label="Vpišite velikost (številko)">
+            {% endif %}
+        </div>
+        <textarea name="description" id="description" placeholder="Opis izdelka. Podpira Markdown." aria-label="Opis izdelka" onkeyup="renderDescription()" rows="10">{{ product.description }}</textarea>
+        <h4>Predogled opisa</h4>
+        <hr>
+        <div id="description-preview"></div>
+        <fieldset>
+            <label>
+                <input name="terms" type="checkbox" role="switch" {% if product.archived %}checked{% endif %} />
+                Je arhivirano?
+            </label>
+            <label>
+                <input name="draft" type="checkbox" role="switch" {% if product.draft %}checked{% endif %} />
+                Je osnutek?
+            </label>
+        </fieldset>
+        <button type="submit">Posodobi</button>
+        <hr>
+    </form>
+    <h3>Naloži sliko</h3>
+    <form method="POST" action="{{ url_for('upload_image', product_id=product.product_id) }}" style="width: fit-content;" enctype="multipart/form-data">
+        Naloži datoteko: <input type="file" id="file" name="file" accept="image/*">
+        <input type="text" name="description" placeholder="Neobvezen opis slike" aria-label="Neobvezen opis slike">
+        <button type="submit" style="width: 100%;">Naloži</button>
+    </form>
+    <h3>Slike izdelka</h3>
+    {% for image in images %}
+        <article>
+            <div class="shared-width">
+                <div class="shared-height" style="width: 300px;">
+                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>↑</button>
+                    <div style="height: 5px;"></div>
+                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>Nastavi kot privzeto sliko</button>
+                    <div style="height: 5px;"></div>
+                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>↓</button>
+                    <div style="height: 5px;"></div>
+                    <a href="{{ url_for('delete_image', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">Izbriši sliko</button></a>
+                </div>
+                <div style="width: 5px;"></div>
+                <img src="/uploads/images/{{ image.image_id }}.png" alt="{{ image.description }}" style="height: 300px;">
+            </div>
+        </article>
+    {% endfor %}
+</main>
+
+<script>
+    function renderDescription() {
+        const desc = document.getElementById("description").value;
+        document.getElementById("description-preview").innerHTML = DOMPurify.sanitize(marked.parse(desc));
+    }
+
+    renderDescription();
+</script>
+</body>
+</html>

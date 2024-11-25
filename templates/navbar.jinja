@@ -1,0 +1,13 @@
+<nav>
+    <ul>
+        <li><strong><a href="{{ url_for('home') }}" class="no-link">Izmenjevalnica oblačil GIMB</a></strong></li>
+    </ul>
+    <ul>
+        {% if name == None or name == "" %}
+            <li><a href="{{ url_for('microsoft_login_redirect') }}">Prijava kot administrator</a></li>
+        {% else %}
+            <li>{{ name }} ({% if is_admin %}Administrator; {% endif %}<a href="{{ url_for('logout') }}">Odjava</a>)</li>
+        {% endif %}
+        <li><a href="{{ url_for('about_project') }}">O projektu</a></li>
+    </ul>
+</nav>

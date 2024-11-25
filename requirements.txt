@@ -1,0 +1,9 @@
+fastapi[standard]
+jinja2
+python-dotenv
+httpx
+sqlalchemy[asyncio]
+aiosqlite
+pillow
+python-multipart
+aiofiles

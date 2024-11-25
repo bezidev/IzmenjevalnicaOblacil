@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'head.jinja' %}
+</head>
+<body>
+<main class="container">
+    {% include 'navbar.jinja' %}
+    <h1>Dodajate nov izdelek</h1>
+    <form method="POST">
+        <input type="text" name="name" placeholder="Ime izdelka" aria-label="Ime izdelka" required>
+        <select name="category" aria-label="Izberite kategorijo" required>
+            <option selected disabled value="">
+                Izberite kategorijo
+            </option>
+            <option value="hat">🧢 Kapa</option>
+            <option value="sunglasses">🕶️ Sončna očala</option>
+            <option value="men-shirts">👕 Moške majice</option>
+            <option value="women-shirts">👚 Ženske majice</option>
+            <option value="men-pants">👖 Moške hlače</option>
+            <option value="women-pants">👖 Ženske hlače</option>
+            <option value="men-shoes">👞 Moški čevlji</option>
+            <option value="women-shoes">🥿 Ženski čevlji</option>
+        </select>
+        <button type="submit">Ustvari kot osnutek</button>
+    </form>
+</main>
+
+<script src="/static/js/slideshow.js"></script>
+</body>
+</html>

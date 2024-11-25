@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'head.jinja' %}
+    <script src="/static/js/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .slideshow-container {
+            position: relative;
+            margin: 50px auto;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+        }
+
+        .fade {
+            animation: fade 1s ease-in-out;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0.4;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .dots {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin: 0 5px;
+            background: #bbb;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dot:hover,
+        .dot.active {
+            background: #515151;
+        }
+
+        .grid-container {
+            display: flex;
+            flex-direction: row;
+        }
+
+        @media (max-width: 576px) {
+            .grid-container {
+                flex-direction: column;
+            }
+        }
+
+        .item-description {
+            width: 30vw !important;
+        }
+
+        @media (max-width: 576px) {
+            .item-description {
+                width: 100% !important;
+            }
+        }
+
+        .grid-element {
+            min-height: 100px;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .image-container {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            position: relative;
+            display: block;
+            align-content: center;
+            max-height: 70vh;
+        }
+
+        .slide img {
+            max-height: 60vh;
+            height:auto;
+            width:auto;
+            align-content: center;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        .slideshow-arrow-container {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            visibility: hidden;
+        }
+
+        .slideshow-arrow-subcontainer {
+            visibility: visible;
+            backdrop-filter: brightness(20%);
+            height: 50px;
+            width: 30px;
+        }
+
+        .slideshow-arrow {
+            display: block;
+            align-content: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    {% include 'navbar.jinja' %}
+    <div class="grid-container">
+        <div class="grid-element">
+            <div class="slideshow-container">
+                {% for image in product_images %}
+                    <div class="slide fade">
+                        <div class="image-container">
+                            <img src="/uploads/images/{{ image.image_id }}.png" alt="{{ image.description }}">
+                        </div>
+                    </div>
+                {% endfor %}
+                <!-- izkaže se, da je JS koda nekako invertana, tako da to nima ravno smisla -->
+                <div class="slideshow-arrow-container" style="justify-content: flex-start;" id="button-left">
+                    <div class="slideshow-arrow-subcontainer" onclick="decreaseSlide()">
+                        <span class="slideshow-arrow"><</span>
+                    </div>
+                </div>
+                <div class="slideshow-arrow-container" style="justify-content: flex-end;" id="button-right">
+                    <div class="slideshow-arrow-subcontainer" onclick="increaseSlide()">
+                        <span class="slideshow-arrow">></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dots for navigation -->
+            <div class="dots">
+                {% for i in product_images %}
+                    <span class="dot" onclick="currentSlide({{ loop.index }})"></span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="grid-element item-description">
+            {% if product.draft %}
+                <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: yellow;">
+                    <h3 style="color: black !important;">Izdelek je še osnutek!</h3>
+                </div>
+                <br>
+            {% endif %}
+            {% if product.archived %}
+                <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: yellow;">
+                    <h3 style="color: black !important;">Izdelek je arhiviran!</h3>
+                </div>
+                <br>
+            {% endif %}
+            <h1>{{ product.name }}</h1>
+            <h3>
+                {% if product.category == "hat" %}
+                    🧢 Kapa
+                {% elif product.category == "sunglasses" %}
+                    🕶️ Sončna očala
+                {% elif product.category == "men-shirts" %}
+                    👕 Moške majice
+                {% elif product.category == "women-shirts" %}
+                    👚 Ženske majice
+                {% elif product.category == "men-pants" %}
+                    👖 Moške hlače
+                {% elif product.category == "women-pants" %}
+                    👖 Ženske hlače
+                {% elif product.category == "men-shoes" %}
+                    👞 Moški čevlji
+                {% elif product.category == "women-shoes" %}
+                    🥿 Ženski čevlji
+                {% endif %}
+            </h3>
+            {% if product.size != "" %}
+                Velikost izdelka: <b>{{ product.size }}</b>
+            {% endif %}
+            <div id="description"></div>
+            <a href="{{ url_for('product_edit', product_id=product.product_id) }}"><button>Uredi</button></a>
+            <button>Arhiviraj</button>
+            <button class="secondary">Izbriši</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    const desc = "{{ product.description }}";
+    document.getElementById("description").innerHTML = DOMPurify.sanitize(marked.parse(desc));
+</script>
+<script src="/static/js/slideshow.js"></script>
+</body>
+</html>

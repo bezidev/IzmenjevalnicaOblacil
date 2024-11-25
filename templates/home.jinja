@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'head.jinja' %}
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-column-gap: 20px;
+            grid-row-gap: 20px;
+            justify-items: stretch;
+            align-items: stretch;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-container {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .grid-element {
+            min-height: 100px;
+            border: solid 2px gray;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .image-container {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            position: relative;
+            display: block;
+            align-content: center;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    {% include 'navbar.jinja' %}
+    {% if login_success == True %}
+        <div style="border-radius: 20px; padding: 10px; background-color: green;">
+            <h3>Prijava je bila uspešna</h3>
+        </div>
+    {% endif %}
+    {% if login_success == False %}
+        <div style="border-radius: 20px; padding: 10px; background-color: #ED4337;">
+            <h3>Težave s prijavo</h3>
+            Prosimo, poskusite znova!
+        </div>
+    {% endif %}
+    <p></p>
+    {% if is_admin %}
+        <a href="/admin/new_product"><button>Dodaj nov izdelek</button></a>
+        <p></p>
+    {% endif %}
+    <div class="grid-container">
+        {% for product in products %}
+            <div class="grid-element">
+                <div class="image-container">
+                    <img alt="{{ product.description }}" src="/uploads/images/{{ product.default_image_id }}.png">
+                </div>
+                <div style="height: 10px"></div>
+                <h4><a href="{{ url_for('item_details', item_id=product.product_id) }}">{{ product.name }}</a></h4>
+                {% if is_admin %}
+                    <div role="group">
+                        <button>Arhiviraj</button>
+                        <button class="secondary">Izbriši</button>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</main>
+</body>
+</html>
