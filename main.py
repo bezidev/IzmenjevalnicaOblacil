@@ -79,7 +79,7 @@ def sort_by_size(e: Product):
         return "6"
     return e.size
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def home(
         request: Request,
         login_success: bool | None = None,
@@ -184,7 +184,7 @@ async def home(
         }
     )
 
-@app.post("/", response_class=HTMLResponse)
+@app.post("/")
 async def product_edit_post(
         sorting_method: str = Form(""),
         active: bool = Form(False),
@@ -227,7 +227,7 @@ async def product_edit_post(
     return RedirectResponse(app.url_path_for("home") + f"?{urllib.parse.urlencode(encode)}", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.get("/about", response_class=HTMLResponse)
+@app.get("/about")
 async def about_project(request: Request):
     user = await get_session_user(request.cookies.get("session"))
     name = f"{user.first_name} {user.surname}" if user is not None else None
@@ -236,7 +236,7 @@ async def about_project(request: Request):
         request=request, name="about.jinja", context={"name": name, "is_admin": is_admin}
     )
 
-@app.get("/item/{item_id}", response_class=HTMLResponse)
+@app.get("/item/{item_id}")
 async def item_details(request: Request, item_id: str):
     user = await get_session_user(request.cookies.get("session"))
     name = f"{user.first_name} {user.surname}" if user is not None else None
@@ -256,7 +256,7 @@ async def item_details(request: Request, item_id: str):
         request=request, name="item.jinja", context={"item": None, "name": name, "is_admin": is_admin, "product": product, "product_images": product_images}
     )
 
-@app.get("/item/{product_id}/edit", response_class=HTMLResponse)
+@app.get("/item/{product_id}/edit")
 async def product_edit(request: Request, product_id: str):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -273,7 +273,7 @@ async def product_edit(request: Request, product_id: str):
         request=request, name="product_edit.jinja", context={"name": name, "is_admin": True, "product": product, "images": product_images}
     )
 
-@app.get("/admin/new_product", response_class=HTMLResponse)
+@app.get("/admin/new_product")
 async def new_product(request: Request):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -283,7 +283,7 @@ async def new_product(request: Request):
         request=request, name="new_product.jinja", context={"name": name, "is_admin": True}
     )
 
-@app.post("/admin/new_product", response_class=HTMLResponse)
+@app.post("/admin/new_product")
 async def new_product_post(request: Request, name: str = Form(""), description: str = Form(""), category: str = Form("")):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -312,7 +312,7 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
         session.add(product)
     return RedirectResponse(app.url_path_for("product_edit", product_id=uid), status_code=status.HTTP_303_SEE_OTHER)
 
-@app.post("/item/{product_id}/edit", response_class=HTMLResponse)
+@app.post("/item/{product_id}/edit")
 async def product_edit_post(request: Request, product_id: str, name: str = Form(""), description: str = Form(""), category: str = Form(""), size: str = Form(""), archived: bool = Form(False), draft: bool = Form(False)):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -337,7 +337,7 @@ async def product_edit_post(request: Request, product_id: str, name: str = Form(
         pi.last_edited_at = int(time.time())
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
 
-@app.get("/item/{product_id}/delete", response_class=HTMLResponse)
+@app.get("/item/{product_id}/delete")
 async def delete_product(request: Request, product_id: str):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -354,7 +354,7 @@ async def delete_product(request: Request, product_id: str):
         await session.execute(delete(Product).filter_by(product_id=product_id))
     return RedirectResponse(app.url_path_for("home"), status_code=status.HTTP_303_SEE_OTHER)
 
-@app.get("/item/{product_id}/archive", response_class=HTMLResponse)
+@app.get("/item/{product_id}/archive")
 async def archive_product(request: Request, product_id: str):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
@@ -552,7 +552,7 @@ async def set_image_default(request: Request, image_id: str):
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.get("/logout", response_class=HTMLResponse)
+@app.get("/logout")
 async def logout(request: Request):
     redirect_response = RedirectResponse(app.url_path_for("home"))
     redirect_response.set_cookie(key="session", value="", httponly=True, secure=True)
@@ -577,13 +577,13 @@ async def logout(request: Request):
     return redirect_response
 
 
-@app.get("/microsoft/login/url", response_class=HTMLResponse)
+@app.get("/microsoft/login/url")
 async def microsoft_login_redirect(request: Request):
     return RedirectResponse(
         f"https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize?client_id={MICROSOFT_CLIENT_ID}&response_type=code&response_mode=query&scope={SCOPE}")
 
 
-@app.get("/microsoft/login/auth", response_class=HTMLResponse)
+@app.get("/microsoft/login/auth")
 async def microsoft_login_callback(request: Request, code: str):
     async with httpx.AsyncClient() as client:
         body = {
