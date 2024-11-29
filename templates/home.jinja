@@ -56,35 +56,183 @@
         <div style="border-radius: 20px; padding: 10px; background-color: green;">
             <h3>Prijava je bila uspešna</h3>
         </div>
-    {% endif %}
-    {% if login_success == False %}
+    {% elif login_success == False %}
         <div style="border-radius: 20px; padding: 10px; background-color: #ED4337;">
             <h3>Težave s prijavo</h3>
             Prosimo, poskusite znova!
         </div>
     {% endif %}
     <p></p>
-    {% if is_admin %}
-        <a href="/admin/new_product"><button>Dodaj nov izdelek</button></a>
-        <p></p>
-    {% endif %}
-    <div class="grid-container">
-        {% for product in products %}
-            <div class="grid-element">
-                <div class="image-container">
-                    <img alt="{{ product.description }}" src="/uploads/images/{{ product.default_image_id }}.png">
-                </div>
-                <div style="height: 10px"></div>
-                <h4><a href="{{ url_for('item_details', item_id=product.product_id) }}">{{ product.name }}</a></h4>
-                {% if is_admin %}
-                    <div role="group">
-                        <button>Arhiviraj</button>
-                        <button class="secondary">Izbriši</button>
-                    </div>
-                {% endif %}
-            </div>
-        {% endfor %}
+    <div style="display: flex; flex-direction: row; justify-content: space-between;">
+        {% if is_admin %}
+            <a href="/admin/new_product">
+                <button>Dodaj nov izdelek</button>
+            </a>
+        {% else %}
+            <div></div>
+        {% endif %}
+        <div style="display: flex; flex-direction: column;">
+            <form method="POST" action="{{ url_for('home') }}" id="sort-form">
+                <select name="sorting_method" aria-label="Sortiraj" style="width: fit-content;" onchange="sort()">
+                    <option value="" {% if sorting_method == "" %}selected{% endif %}>Nazadnje spremenjeno</option>
+                    <option value="last-changed-asc" {% if sorting_method == "last-changed-asc" %}selected{% endif %}>
+                        Najzadnje spremenjeno
+                    </option>
+                    <option value="created-desc" {% if sorting_method == "created-desc" %}selected{% endif %}>Nazadnje
+                        ustvarjeno
+                    </option>
+                    <option value="created-asc" {% if sorting_method == "created-asc" %}selected{% endif %}>Najzadnje
+                        ustvarjeno
+                    </option>
+                    <option value="alphabet-asc" {% if sorting_method == "alphabet-asc" %}selected{% endif %}>Abecedni
+                        vrstni red
+                    </option>
+                    <option value="alphabet-desc" {% if sorting_method == "alphabet-desc" %}selected{% endif %}>
+                        Padajoči abecedni vrstni red
+                    </option>
+                    <option value="size-asc" {% if sorting_method == "size-asc" %}selected{% endif %}>
+                        Naraščajoča velikost
+                    </option>
+                    <option value="size-desc" {% if sorting_method == "size-desc" %}selected{% endif %}>
+                        Padajoča velikost
+                    </option>
+                </select>
+                <details class="dropdown">
+                    <summary>
+                        Izberite filtre
+                    </summary>
+                    <ul>
+                        {% if is_admin %}
+                            <span style="padding: 5px; font-weight: bold;">Stanja izdelkov:</span>
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="active" {% if filter_active %}checked{% endif %}/>
+                                    Aktivno
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="archived" {% if filter_archived %}checked{% endif %}/>
+                                    Arhivirano
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="draft" {% if filter_draft %}checked{% endif %}/>
+                                    Osnutek
+                                </label>
+                            </li>
+                        {% endif %}
+                        <span style="padding: 5px; font-weight: bold;">Tipi izdelkov:</span>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="hat" {% if filter_hat %}checked{% endif %}/>
+                                🧢 Kapa
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="sunglasses" {% if filter_sunglasses %}checked{% endif %}/>
+                                🕶️ Sončna očala
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="men_shirts" {% if filter_men_shirts %}checked{% endif %}/>
+                                👕 Moške majice
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="women_shirts"
+                                       {% if filter_women_shirts %}checked{% endif %}/>
+                                👚 Ženske majice
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="men_pants" {% if filter_men_pants %}checked{% endif %}/>
+                                👖 Moške hlače
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="women_pants"
+                                       {% if filter_women_pants %}checked{% endif %}/>
+                                👖 Ženske hlače
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="men_shoes" {% if filter_men_shoes %}checked{% endif %}/>
+                                👞 Moški čevlji
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="women_shoes"
+                                       {% if filter_women_shoes %}checked{% endif %}/>
+                                🥿 Ženski čevlji
+                            </label>
+                        </li>
+                        <button type="submit">Potrdi filtre</button>
+                    </ul>
+                </details>
+            </form>
+        </div>
     </div>
+    {% if products|length > 0 %}
+        <div class="grid-container">
+            {% for product in products %}
+                <div class="grid-element">
+                    <div class="image-container">
+                        <img alt="{{ product.description }}" src="/uploads/images/{{ product.default_image_id }}.png">
+                    </div>
+                    <div style="height: 10px"></div>
+                    <h4><a href="{{ url_for('item_details', item_id=product.product_id) }}">{{ product.name }}</a></h4>
+                    <h5>
+                        {% if product.category == "hat" %}
+                            🧢 Kapa
+                        {% elif product.category == "sunglasses" %}
+                            🕶️ Sončna očala
+                        {% elif product.category == "men-shirts" %}
+                            👕 Moške majice {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% elif product.category == "women-shirts" %}
+                            👚 Ženske majice {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% elif product.category == "men-pants" %}
+                            👖 Moške hlače {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% elif product.category == "women-pants" %}
+                            👖 Ženske hlače {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% elif product.category == "men-shoes" %}
+                            👞 Moški čevlji {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% elif product.category == "women-shoes" %}
+                            🥿 Ženski čevlji {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
+                        {% endif %}
+                    </h5>
+                    {% if is_admin %}
+                        <div role="group">
+                            <a href="{{ url_for('archive_product', product_id=product.product_id) }}">
+                                <button style="width: 100%;">{% if product.archived %}Odarhiviraj{% else %}
+                                    Arhiviraj{% endif %}</button>
+                            </a>
+                            <a href="{{ url_for('delete_product', product_id=product.product_id) }}">
+                                <button style="width: 100%;" class="secondary">Izbriši</button>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <span style="font-size: 5em; font-weight: bold;">(>_<)</span>
+        <h3>Za vaše iskanje ni zadetkov.</h3>
+    {% endif %}
 </main>
 </body>
+<script>
+    function sort() {
+        console.log("sort")
+        document.getElementById("sort-form").submit();
+    }
+</script>
 </html>

@@ -169,7 +169,7 @@
                 <br>
             {% endif %}
             {% if product.archived %}
-                <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: yellow;">
+                <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: red;">
                     <h3 style="color: black !important;">Izdelek je arhiviran!</h3>
                 </div>
                 <br>
@@ -199,14 +199,14 @@
             {% endif %}
             <div id="description"></div>
             <a href="{{ url_for('product_edit', product_id=product.product_id) }}"><button>Uredi</button></a>
-            <button>Arhiviraj</button>
-            <button class="secondary">Izbriši</button>
+            <a href="{{ url_for('archive_product', product_id=product.product_id) }}"><button>{% if product.archived %}Odarhiviraj{% else %}Arhiviraj{% endif %}</button></a>
+            <a href="{{ url_for('delete_product', product_id=product.product_id) }}"><button class="secondary">Izbriši</button></a>
         </div>
     </div>
 </main>
 
 <script>
-    const desc = "{{ product.description }}";
+    const desc = `{{ product.description }}`;
     document.getElementById("description").innerHTML = DOMPurify.sanitize(marked.parse(desc));
 </script>
 <script src="/static/js/slideshow.js"></script>

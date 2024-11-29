@@ -21,7 +21,7 @@
     {% include 'navbar.jinja' %}
     <h1>Urejate izdelek</h1>
     <h3>Splošni podatki o izdelku</h3>
-    <form method="POST">
+    <form method="POST" action="{{ url_for('product_edit_post', product_id=product.product_id) }}">
         <input type="text" name="name" placeholder="Ime izdelka" aria-label="Ime izdelka" value="{{ product.name }}" required>
         <div class="shared-width">
             <select name="category" aria-label="Izberite kategorijo" required>
@@ -57,7 +57,7 @@
         <div id="description-preview"></div>
         <fieldset>
             <label>
-                <input name="terms" type="checkbox" role="switch" {% if product.archived %}checked{% endif %} />
+                <input name="archived" type="checkbox" role="switch" {% if product.archived %}checked{% endif %} />
                 Je arhivirano?
             </label>
             <label>
@@ -79,11 +79,11 @@
         <article>
             <div class="shared-width">
                 <div class="shared-height" style="width: 300px;">
-                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>↑</button>
+                    <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='up') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↑</button></a>
                     <div style="height: 5px;"></div>
-                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>Nastavi kot privzeto sliko</button>
+                    <a href="{{ url_for('set_image_default', image_id=image.image_id) }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>Nastavi kot privzeto sliko</button></a>
                     <div style="height: 5px;"></div>
-                    <button {% if product.default_image_id == image.image_id %}disabled{% endif %}>↓</button>
+                    <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='down') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↓</button></a>
                     <div style="height: 5px;"></div>
                     <a href="{{ url_for('delete_image', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">Izbriši sliko</button></a>
                 </div>
