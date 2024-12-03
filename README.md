@@ -62,7 +62,7 @@ Ko boš spreminjal kodo, se bo spletna stran sama posodabljala (a ne osveževala
 > Vse v tem koraku je potrebno narediti največ enkrat. Če se odjaviš in znova prijaviš, boš še vedno administrator/-ka.
 
 Pojdi na http://127.0.0.1:8000 in se prijavi preko Microsofta. Po prijavi se ustvari uporabniški profil v lokalni podatkovni bazi.
-To podatkovno bazo je moč najti kot `database.sqlite3`.
+To podatkovno bazo je moč najti kot `database/database.sqlite3`.
 
 Vsi naslednji ukazi naj se poženejo v ustreznem terminalu za ustrezno platformo, tj. PowerShell oz. Command Prompt za Windows ali ustrezen terminal (sh, bash, zsh, fish ...) za Linux.
 
@@ -72,7 +72,7 @@ V primeru, da to ni mogoče, imaš v `cmdline/` direktoriju na voljo `sqlite3` o
 
 Svoj uporabniški profil lahko povišaš z naslednjimi zaporedji ukazov (s tem, da `ime.priimek` zamenjaš s svojim imenom in priimkom oz. ustreznim šolskim e-naslovom):
 ```
-sqlite3 database.sqlite3
+sqlite3 database/database.sqlite3
 
 UPDATE users SET is_admin=true WHERE email='ime.priimek@gimb.org';
 ```
@@ -82,7 +82,7 @@ V `cmdline/` direktoriju je na voljo `sqlite3.exe` orodje.
 
 Svoj uporabniški profil lahko povišaš z naslednjimi zaporedji ukazov (s tem, da `ime.priimek` zamenjaš s svojim imenom in priimkom oz. ustreznim šolskim e-naslovom):
 ```
-cmdline/sqlite3.exe database.sqlite3
+cmdline/sqlite3.exe database/database.sqlite3
 
 UPDATE users SET is_admin=true WHERE email='ime.priimek@gimb.org';
 ```
