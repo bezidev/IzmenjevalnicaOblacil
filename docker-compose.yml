@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  backend:
+    image: ghcr.io/bezidev/izmenjevalnica-oblacil
+    volumes:
+      - ./uploads/images:/app/uploads/images
+      - ./database:/app/database
+    environment:
+      - TZ=Europe/Ljubljana
+    restart: always
+    ports:
+      - 127.0.0.1:5299:80
+    env_file:
+      - .env

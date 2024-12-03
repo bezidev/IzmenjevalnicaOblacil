@@ -5,7 +5,7 @@ from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_CONNECTION = f"sqlite+aiosqlite:///database.sqlite3"
+DATABASE_CONNECTION = f"sqlite+aiosqlite:///database/database.sqlite3"
 
 engine = create_async_engine(DATABASE_CONNECTION)
 connection = async_sessionmaker(engine, expire_on_commit=False)

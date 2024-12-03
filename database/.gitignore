@@ -1,0 +1,5 @@
+# Ignoriraj vse v tem direktoriju
+*
+
+# Razen .gitignore
+!.gitignore
