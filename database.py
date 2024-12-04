@@ -46,8 +46,8 @@ class ProductImage(Base):
 # Lokalni "cache" sessionov, da ne potrebujemo vedno znova zahtevati uporabnika od podatkovne baze
 sessions: dict[str, User] = {}
 
-async def get_session_user(session_token: str) -> User | None:
-    if session_token == "":
+async def get_session_user(session_token: str | None) -> User | None:
+    if session_token == "" or session_token is None:
         return None
 
     # Pogledamo v cache, če je uporabnik že tam
