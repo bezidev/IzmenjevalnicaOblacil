@@ -19,6 +19,7 @@ class User(Base):
     surname = Column(String(100))
     session_token = Column(String(200), nullable=True, unique=True)
     is_admin = Column(Boolean)
+    is_teacher = Column(Boolean, default=False)
 
 class Product(Base):
     __tablename__ = 'products'
@@ -29,6 +30,9 @@ class Product(Base):
     size = Column(String(100))
     default_image_id = Column(String(50))
     archived = Column(Boolean)
+    teacher = Column(Boolean)
+    limit_to_teachers = Column(Boolean)
+    state = Column(Integer)
     draft = Column(Boolean)
 
     published_by = Column(String(50))

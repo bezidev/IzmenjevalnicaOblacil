@@ -39,6 +39,13 @@ CATEGORIES = [
     "women-shoes",
 ]
 
+ALLOWED_PRODUCT_STATES = [
+    -1,
+    100,
+    200,
+    300,
+]
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Executed on startup
@@ -95,10 +102,12 @@ async def home(
         women_pants: bool = False,
         men_shoes: bool = False,
         women_shoes: bool = False,
+        teacher: bool = False,
 ):
     user = await get_session_user(request.cookies.get("session"))
     name = f"{user.first_name} {user.surname}" if user is not None else None
     is_admin = False if user is None else user.is_admin
+    is_teacher = False if user is None else user.is_teacher
 
     # Če je vse uncheckano, checkamo zadeve
     if not active and not archived and not draft:
@@ -119,11 +128,17 @@ async def home(
         if is_admin:
             products = (await session.execute(select(Product).filter_by())).all()
         else:
-            products = (await session.execute(select(Product).filter_by(draft=False, archived=False))).all()
+            products = (await session.execute(select(Product).filter_by(
+                draft=False,
+                archived=False,
+                limit_to_teachers=is_teacher,
+            ))).all()
         products: List[Product] = [product[0] for product in products]
         products_filtered = []
         products_filtered2 = []
         for product in products:
+            if teacher and not product.teacher:
+                continue
             if active and not product.archived and not product.draft:
                 products_filtered.append(product)
             elif archived and product.archived:
@@ -168,6 +183,7 @@ async def home(
             "login_success": login_success,
             "name": name,
             "is_admin": is_admin,
+            "is_teacher": is_teacher,
             "products": products_filtered2,
             "sorting_method": sort,
             "filter_active": active,
@@ -181,11 +197,12 @@ async def home(
             "filter_women_pants": women_pants,
             "filter_men_shoes": men_shoes,
             "filter_women_shoes": women_shoes,
+            "filter_teacher": teacher,
         }
     )
 
 @app.post("/")
-async def product_edit_post(
+async def home_post(
         sorting_method: str = Form(""),
         active: bool = Form(False),
         archived: bool = Form(False),
@@ -198,6 +215,7 @@ async def product_edit_post(
         women_pants: bool = Form(False),
         men_shoes: bool = Form(False),
         women_shoes: bool = Form(False),
+        teacher: bool = Form(False),
 ):
     encode = {
         "sort": sorting_method,
@@ -224,6 +242,8 @@ async def product_edit_post(
         encode["men_shoes"] = True
     if women_shoes:
         encode["women_shoes"] = True
+    if teacher:
+        encode["teacher"] = True
     return RedirectResponse(app.url_path_for("home") + f"?{urllib.parse.urlencode(encode)}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -241,13 +261,14 @@ async def item_details(request: Request, item_id: str):
     user = await get_session_user(request.cookies.get("session"))
     name = f"{user.first_name} {user.surname}" if user is not None else None
     is_admin = False if user is None else user.is_admin
-    if not is_admin:
-        edit = False
+    is_teacher = False if user is None else user.is_teacher
     async with connection.begin() as session:
         product = (await session.execute(select(Product).filter_by(product_id=item_id))).one_or_none()
         if product is None:
             return RedirectResponse(app.url_path_for("home"))
         product = product[0]
+        if product.limit_to_teachers and not (is_admin or is_teacher):
+            return RedirectResponse(app.url_path_for("home"))
         if (product.draft or product.archived) and not is_admin:
             return RedirectResponse(app.url_path_for("home"))
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=item_id).order_by(ProductImage.position))).all()
@@ -304,6 +325,9 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
             default_image_id="",
             archived=False,
             draft=True,
+            teacher=False,
+            limit_to_teachers=False,
+            state=-1,
             published_by=user.user_id,
             published_at=t,
             last_edited_by=user.user_id,
@@ -313,7 +337,7 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
     return RedirectResponse(app.url_path_for("product_edit", product_id=uid), status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/item/{product_id}/edit")
-async def product_edit_post(request: Request, product_id: str, name: str = Form(""), description: str = Form(""), category: str = Form(""), size: str = Form(""), archived: bool = Form(False), draft: bool = Form(False)):
+async def product_edit_post(request: Request, product_id: str, name: str = Form(""), description: str = Form(""), category: str = Form(""), size: str = Form(""), state: int = Form(-1), archived: bool = Form(False), teacher: bool = Form(False), limit_to_teachers: bool = Form(False), draft: bool = Form(False)):
     user = await get_session_user(request.cookies.get("session"))
     if user is None or not user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
@@ -332,6 +356,13 @@ async def product_edit_post(request: Request, product_id: str, name: str = Form(
         pi.category = category
         pi.size = size
         pi.archived = archived
+        pi.teacher = teacher
+        if teacher:
+            pi.limit_to_teachers = limit_to_teachers
+        else:
+            pi.limit_to_teachers = False
+        if state in ALLOWED_PRODUCT_STATES:
+            pi.state = state
         pi.draft = draft
         pi.last_edited_by = user.user_id
         pi.last_edited_at = int(time.time())
@@ -616,6 +647,7 @@ async def microsoft_login_callback(request: Request, code: str):
         # ki nam ga je poslal Microsoft. V nadaljnje ne bomo več potrebovali tega avtorizacijskega tokena, razen
         # ob nadaljnjih prijavah.
         response = user_response.json()
+        is_teacher = "@gimb.org" in response["mail"] # dijaki imajo @dijaki.gimb.org mejl. Torej lahko zdeduciramo, da so @gimb.org naslovi rezervirani za učitelje
         first_name: str = response["givenName"]  # Ime
         surname: str = response["surname"]  # Priimek
         user_principal_name: str = response["userPrincipalName"]  # @gimb.org elektronski naslov
@@ -636,6 +668,7 @@ async def microsoft_login_callback(request: Request, code: str):
                 surname=surname,
                 session_token=None,
                 is_admin=False,
+                is_teacher=is_teacher,
             )
         else:
             user = user[0]
@@ -643,6 +676,8 @@ async def microsoft_login_callback(request: Request, code: str):
         # Zgeneriramo nov session token za uporabnika, če ga še nima
         if user.session_token is None:
             user.session_token = random_session_token()
+
+        user.is_teacher = is_teacher
 
         session.add(user)
 

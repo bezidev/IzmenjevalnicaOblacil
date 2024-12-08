@@ -1,0 +1,4 @@
+ALTER TABLE users ADD COLUMN is_teacher BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN teacher BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN limit_to_teachers BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN state INTEGER DEFAULT -1;

@@ -101,7 +101,7 @@
                     <summary>
                         Izberite filtre
                     </summary>
-                    <ul>
+                    <ul style="padding: 0 10px;">
                         {% if is_admin %}
                             <span style="padding: 5px; font-weight: bold;">Stanja izdelkov:</span>
                             <li>
@@ -122,6 +122,15 @@
                                     Osnutek
                                 </label>
                             </li>
+                        {% endif %}
+                        {% if is_teacher or is_admin %}
+                            <p></p>
+                            <fieldset>
+                                <label>
+                                    <input name="teacher" type="checkbox" role="switch" {% if filter_teacher %}checked{% endif %} />
+                                    Prikaži samo izdelke, prispevane s strani učiteljev
+                                </label>
+                            </fieldset>
                         {% endif %}
                         <span style="padding: 5px; font-weight: bold;">Tipi izdelkov:</span>
                         <li>
@@ -209,6 +218,44 @@
                             🥿 Ženski čevlji {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
                         {% endif %}
                     </h5>
+                    <div style="display: flex; flex-direction: row;">
+                        <div style="border: solid 2px white; border-radius: 15px; min-width: 80px; width: 25%; height: 30px; display: flex; flex-direction: row;">
+                            <div style="align-content: center; width: 100%;">
+                                <div style="display: flex; flex-direction: row; padding: 0 5px; justify-content: space-between; width: 100%;">
+                                    {% if product.state >= 100 %}
+                                        <div style="background-color: var(--pico-primary-background); height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% else %}
+                                        <div style="background-color: white; height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% endif %}
+                                    {% if product.state >= 200 %}
+                                        <div style="background-color: var(--pico-primary-background); height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% else %}
+                                        <div style="background-color: white; height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% endif %}
+                                    {% if product.state >= 300 %}
+                                        <div style="background-color: var(--pico-primary-background); height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% else %}
+                                        <div style="background-color: white; height: 20px; width: 20px; border-radius: 10px;"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="width: 10px;"></div>
+                        {% if product.state == -1 %}
+                            Neznano stanje
+                        {% elif product.state == 100 %}
+                            Dobro stanje
+                        {% elif product.state == 200 %}
+                            Zelo dobro stanje
+                        {% elif product.state == 300 %}
+                            Odlično stanje
+                        {% endif %}
+                    </div>
+                    {% if product.teacher and (is_teacher or is_admin) %}
+                        <div style="height: 10px;"></div>
+                        🧑‍🏫 Izdelek je bil prispevan s strani učitelja
+                    {% endif %}
+                    <p></p>
                     {% if is_admin %}
                         <div role="group">
                             <a href="{{ url_for('archive_product', product_id=product.product_id) }}">

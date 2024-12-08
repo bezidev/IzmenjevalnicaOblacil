@@ -51,6 +51,18 @@
                 <input type="number" name="size" placeholder="Vpišite velikost (številko)" aria-label="Vpišite velikost (številko)">
             {% endif %}
         </div>
+        <select name="state" aria-label="Stanje izdelka">
+            <option value="-1" {% if product.state == -1 %}selected{% endif %}>Izdelek je v neznanem stanju</option>
+            <option value="100" {% if product.state == 100 %}selected{% endif %}>
+                Izdelek je v dobrem stanju
+            </option>
+            <option value="200" {% if product.state == 200 %}selected{% endif %}>
+                Izdelek je v zelo dobrem stanju
+            </option>
+            <option value="300" {% if product.state == 300 %}selected{% endif %}>
+                Izdelek je v odličnem stanju
+            </option>
+        </select>
         <textarea name="description" id="description" placeholder="Opis izdelka. Podpira Markdown." aria-label="Opis izdelka" onkeyup="renderDescription()" rows="10">{{ product.description }}</textarea>
         <h4>Predogled opisa</h4>
         <hr>
@@ -63,6 +75,14 @@
             <label>
                 <input name="draft" type="checkbox" role="switch" {% if product.draft %}checked{% endif %} />
                 Je osnutek?
+            </label>
+            <label>
+                <input name="teacher" type="checkbox" role="switch" {% if product.teacher %}checked{% endif %} />
+                Je učitelj prispeval izdelek?
+            </label>
+            <label>
+                <input name="limit_to_teachers" type="checkbox" role="switch" {% if product.limit_to_teachers %}checked{% endif %} />
+                Omeji izdelek samo na učitelje
             </label>
         </fieldset>
         <button type="submit">Posodobi</button>
