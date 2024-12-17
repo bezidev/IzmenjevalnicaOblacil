@@ -19,25 +19,23 @@
 <body>
 <main class="container">
     {% include 'navbar.jinja' %}
-    <h1>Urejate izdelek</h1>
-    <h3>Splošni podatki o izdelku</h3>
+    <h1>{{ "editing_product"|translate(lang) }}</h1>
+    <h3>{{ "general_product_details"|translate(lang) }}</h3>
     <form method="POST" action="{{ url_for('product_edit_post', product_id=product.product_id) }}">
-        <input type="text" name="name" placeholder="Ime izdelka" aria-label="Ime izdelka" value="{{ product.name }}" required>
+        <input type="text" name="name" placeholder="{{ "product_name"|translate(lang) }}" aria-label="{{ "product_name"|translate(lang) }}" value="{{ product.name }}" required>
         <div class="shared-width">
-            <select name="category" aria-label="Izberite kategorijo" required>
-                <option value="hat" {% if product.category == "hat" %}selected{% endif %}>🧢 Kapa</option>
-                <option value="sunglasses" {% if product.category == "sunglasses" %}selected{% endif %}>🕶️ Sončna očala</option>
-                <option value="men-shirts" {% if product.category == "men-shirts" %}selected{% endif %}>👕 Moške majice</option>
-                <option value="women-shirts" {% if product.category == "women-shirts" %}selected{% endif %}>👚 Ženske majice</option>
-                <option value="men-pants" {% if product.category == "men-pants" %}selected{% endif %}>👖 Moške hlače</option>
-                <option value="women-pants" {% if product.category == "women-pants" %}selected{% endif %}>👖 Ženske hlače</option>
-                <option value="men-shoes" {% if product.category == "men-shoes" %}selected{% endif %}>👞 Moški čevlji</option>
-                <option value="women-shoes" {% if product.category == "women-shoes" %}selected{% endif %}>🥿 Ženski čevlji</option>
+            <select name="category" aria-label="{{ "select_category"|translate(lang) }}" required>
+                {% for category in CATEGORIES %}
+                    <option value="{{ category }}" {% if product.category == category %}selected{% endif %}>{{ PRODUCT_CATEGORIES[category]["emoji"] }} {{ PRODUCT_CATEGORIES[category]["name_" + lang] }}</option>
+                {% endfor %}
             </select>
-            {% if product.category == "men-shirts" or product.category == "women-shirts" or product.category == "men-pants" or product.category == "women-pants" %}
+            {% if PRODUCT_CATEGORIES[product.category]["has_size"] and (product.category == "men-shoes" or product.category == "women-shoes") %}
                 <div style="width: 5px;"></div>
-                <select name="size" aria-label="Izberite velikost">
-                    <option value="">Izberite velikost</option>
+                <input type="number" name="size" placeholder="{{ "write_size"|translate(lang) }}" aria-label="{{ "write_size"|translate(lang) }}">
+            {% elif PRODUCT_CATEGORIES[product.category]["has_size"] %}
+                <div style="width: 5px;"></div>
+                <select name="size" aria-label="{{ "select_size"|translate(lang) }}">
+                    <option value="">{{ "select_size"|translate(lang) }}</option>
                     <option {% if product.size == "XXS" %}selected{% endif %}>XXS</option>
                     <option {% if product.size == "XS" %}selected{% endif %}>XS</option>
                     <option {% if product.size == "S" %}selected{% endif %}>S</option>
@@ -46,66 +44,63 @@
                     <option {% if product.size == "XL" %}selected{% endif %}>XL</option>
                     <option {% if product.size == "XXL" %}selected{% endif %}>XXL</option>
                 </select>
-            {% elif product.category == "men-shoes" or product.category == "women-shoes" %}
-                <div style="width: 5px;"></div>
-                <input type="number" name="size" placeholder="Vpišite velikost (številko)" aria-label="Vpišite velikost (številko)">
             {% endif %}
         </div>
-        <select name="state" aria-label="Stanje izdelka">
-            <option value="-1" {% if product.state == -1 %}selected{% endif %}>Izdelek je v neznanem stanju</option>
+        <select name="state" aria-label="{{ "product_state"|translate(lang) }}">
+            <option value="-1" {% if product.state == -1 %}selected{% endif %}>{{ "product_state_unknown"|translate(lang) }}</option>
             <option value="100" {% if product.state == 100 %}selected{% endif %}>
-                Izdelek je v dobrem stanju
+                {{ "product_state_good"|translate(lang) }}
             </option>
             <option value="200" {% if product.state == 200 %}selected{% endif %}>
-                Izdelek je v zelo dobrem stanju
+                {{ "product_state_great"|translate(lang) }}
             </option>
             <option value="300" {% if product.state == 300 %}selected{% endif %}>
-                Izdelek je v odličnem stanju
+                {{ "product_state_excellent"|translate(lang) }}
             </option>
         </select>
-        <textarea name="description" id="description" placeholder="Opis izdelka. Podpira Markdown." aria-label="Opis izdelka" onkeyup="renderDescription()" rows="10">{{ product.description }}</textarea>
-        <h4>Predogled opisa</h4>
+        <textarea name="description" id="description" placeholder="{{ "product_description_helper"|translate(lang) }}" aria-label="{{ "product_description_helper"|translate(lang) }}" onkeyup="renderDescription()" rows="10">{{ product.description }}</textarea>
+        <h4>{{ "description_preview"|translate(lang) }}</h4>
         <hr>
         <div id="description-preview"></div>
         <fieldset>
             <label>
                 <input name="archived" type="checkbox" role="switch" {% if product.archived %}checked{% endif %} />
-                Je arhivirano?
+                {{ "is_archived"|translate(lang) }}
             </label>
             <label>
                 <input name="draft" type="checkbox" role="switch" {% if product.draft %}checked{% endif %} />
-                Je osnutek?
+                {{ "is_draft"|translate(lang) }}
             </label>
             <label>
                 <input name="teacher" type="checkbox" role="switch" {% if product.teacher %}checked{% endif %} />
-                Je učitelj prispeval izdelek?
+                {{ "has_teacher_contributed"|translate(lang) }}
             </label>
             <label>
                 <input name="limit_to_teachers" type="checkbox" role="switch" {% if product.limit_to_teachers %}checked{% endif %} />
-                Omeji izdelek samo na učitelje
+                {{ "limit_only_to_teachers"|translate(lang) }}
             </label>
         </fieldset>
-        <button type="submit">Posodobi</button>
+        <button type="submit">{{ "update"|translate(lang) }}</button>
         <hr>
     </form>
-    <h3>Naloži sliko</h3>
+    <h3>{{ "upload_picture"|translate(lang) }}</h3>
     <form method="POST" action="{{ url_for('upload_image', product_id=product.product_id) }}" style="width: fit-content;" enctype="multipart/form-data">
-        Naloži datoteko: <input type="file" id="file" name="file" accept="image/*">
-        <input type="text" name="description" placeholder="Neobvezen opis slike" aria-label="Neobvezen opis slike">
-        <button type="submit" style="width: 100%;">Naloži</button>
+        <input type="file" id="file" name="file" accept="image/*">
+        <input type="text" name="description" placeholder="{{ "non_mandatory_picture_description"|translate(lang) }}" aria-label="{{ "non_mandatory_picture_description"|translate(lang) }}">
+        <button type="submit" style="width: 100%;">{{ "upload"|translate(lang) }}</button>
     </form>
-    <h3>Slike izdelka</h3>
+    <h3>{{ "product_images"|translate(lang) }}</h3>
     {% for image in images %}
         <article>
             <div class="shared-width">
                 <div class="shared-height" style="width: 300px;">
                     <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='up') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↑</button></a>
                     <div style="height: 5px;"></div>
-                    <a href="{{ url_for('set_image_default', image_id=image.image_id) }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>Nastavi kot privzeto sliko</button></a>
+                    <a href="{{ url_for('set_image_default', image_id=image.image_id) }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>{{ "set_default_picture"|translate(lang) }}</button></a>
                     <div style="height: 5px;"></div>
                     <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='down') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↓</button></a>
                     <div style="height: 5px;"></div>
-                    <a href="{{ url_for('delete_image', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">Izbriši sliko</button></a>
+                    <a href="{{ url_for('delete_image', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">{{ "delete_picture"|translate(lang) }}</button></a>
                 </div>
                 <div style="width: 5px;"></div>
                 <img src="/uploads/images/{{ image.image_id }}.png" alt="{{ image.description }}" style="height: 300px;">

@@ -6,23 +6,18 @@
 <body>
 <main class="container">
     {% include 'navbar.jinja' %}
-    <h1>Dodajate nov izdelek</h1>
+    <h1>{{ "adding_new_product"|translate(lang) }}</h1>
     <form method="POST">
-        <input type="text" name="name" placeholder="Ime izdelka" aria-label="Ime izdelka" required>
-        <select name="category" aria-label="Izberite kategorijo" required>
+        <input type="text" name="name" placeholder="{{ "product_name"|translate(lang) }}" aria-label="{{ "product_name"|translate(lang) }}" required>
+        <select name="category" aria-label="{{ "select_category"|translate(lang) }}" required>
             <option selected disabled value="">
-                Izberite kategorijo
+                {{ "select_category"|translate(lang) }}
             </option>
-            <option value="hat">🧢 Kapa</option>
-            <option value="sunglasses">🕶️ Sončna očala</option>
-            <option value="men-shirts">👕 Moške majice</option>
-            <option value="women-shirts">👚 Ženske majice</option>
-            <option value="men-pants">👖 Moške hlače</option>
-            <option value="women-pants">👖 Ženske hlače</option>
-            <option value="men-shoes">👞 Moški čevlji</option>
-            <option value="women-shoes">🥿 Ženski čevlji</option>
+            {% for category in CATEGORIES %}
+                <option value="{{ category }}">{{ PRODUCT_CATEGORIES[category]["emoji"] }} {{ PRODUCT_CATEGORIES[category]["name_" + lang] }}</option>
+            {% endfor %}
         </select>
-        <button type="submit">Ustvari kot osnutek</button>
+        <button type="submit">{{ "create_as_draft"|translate(lang) }}</button>
     </form>
 </main>
 

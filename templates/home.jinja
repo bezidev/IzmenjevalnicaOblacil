@@ -54,72 +54,58 @@
     {% include 'navbar.jinja' %}
     {% if login_success == True %}
         <div style="border-radius: 20px; padding: 10px; background-color: green;">
-            <h3>Prijava je bila uspešna</h3>
+            <h3>{{ "login_successful"|translate(lang) }}</h3>
         </div>
     {% elif login_success == False %}
         <div style="border-radius: 20px; padding: 10px; background-color: #ED4337;">
-            <h3>Težave s prijavo</h3>
-            Prosimo, poskusite znova!
+            <h3>{{ "error_signing_in"|translate(lang) }}</h3>
+            {{ "please_try_again"|translate(lang) }}
         </div>
     {% endif %}
     <p></p>
     <div style="display: flex; flex-direction: row; justify-content: space-between;">
         {% if is_admin %}
             <a href="/admin/new_product">
-                <button>Dodaj nov izdelek</button>
+                <button>{{ "add_new_product"|translate(lang) }}</button>
             </a>
         {% else %}
             <div></div>
         {% endif %}
         <div style="display: flex; flex-direction: column;">
             <form method="POST" action="{{ url_for('home') }}" id="sort-form">
-                <select name="sorting_method" aria-label="Sortiraj" style="width: fit-content;" onchange="sort()">
-                    <option value="" {% if sorting_method == "" %}selected{% endif %}>Nazadnje spremenjeno</option>
-                    <option value="last-changed-asc" {% if sorting_method == "last-changed-asc" %}selected{% endif %}>
-                        Najzadnje spremenjeno
-                    </option>
-                    <option value="created-desc" {% if sorting_method == "created-desc" %}selected{% endif %}>Nazadnje
-                        ustvarjeno
-                    </option>
-                    <option value="created-asc" {% if sorting_method == "created-asc" %}selected{% endif %}>Najzadnje
-                        ustvarjeno
-                    </option>
-                    <option value="alphabet-asc" {% if sorting_method == "alphabet-asc" %}selected{% endif %}>Abecedni
-                        vrstni red
-                    </option>
-                    <option value="alphabet-desc" {% if sorting_method == "alphabet-desc" %}selected{% endif %}>
-                        Padajoči abecedni vrstni red
-                    </option>
-                    <option value="size-asc" {% if sorting_method == "size-asc" %}selected{% endif %}>
-                        Naraščajoča velikost
-                    </option>
-                    <option value="size-desc" {% if sorting_method == "size-desc" %}selected{% endif %}>
-                        Padajoča velikost
-                    </option>
+                <select name="sorting_method" aria-label="{{ "sort"|translate(lang) }}" style="width: fit-content;" onchange="sort()">
+                    <option value="" {% if sorting_method == "" %}selected{% endif %}>{{ "recently_changed"|translate(lang) }}</option>
+                    <option value="last-changed-asc" {% if sorting_method == "last-changed-asc" %}selected{% endif %}>{{ "least_recently_changed"|translate(lang) }}</option>
+                    <option value="created-desc" {% if sorting_method == "created-desc" %}selected{% endif %}>{{ "recently_created"|translate(lang) }}</option>
+                    <option value="created-asc" {% if sorting_method == "created-asc" %}selected{% endif %}>{{ "least_recently_created"|translate(lang) }}</option>
+                    <option value="alphabet-asc" {% if sorting_method == "alphabet-asc" %}selected{% endif %}>{{ "alphabetic_order"|translate(lang) }}</option>
+                    <option value="alphabet-desc" {% if sorting_method == "alphabet-desc" %}selected{% endif %}>{{ "reverse_alphabetic_order"|translate(lang) }}</option>
+                    <option value="size-asc" {% if sorting_method == "size-asc" %}selected{% endif %}>{{ "increasing_size"|translate(lang) }}</option>
+                    <option value="size-desc" {% if sorting_method == "size-desc" %}selected{% endif %}>{{ "decreasing_size"|translate(lang) }}</option>
                 </select>
                 <details class="dropdown">
                     <summary>
-                        Izberite filtre
+                        {{ "select_filters"|translate(lang) }}
                     </summary>
                     <ul style="padding: 0 10px;">
                         {% if is_admin %}
-                            <span style="padding: 5px; font-weight: bold;">Stanja izdelkov:</span>
+                            <span style="padding: 5px; font-weight: bold;">{{ "product_states"|translate(lang) }}</span>
                             <li>
                                 <label>
-                                    <input type="checkbox" name="active" {% if filter_active %}checked{% endif %}/>
-                                    Aktivno
+                                    <input type="checkbox" name="active" {% if filters["filter_active"] %}checked{% endif %}/>
+                                    {{ "active"|translate(lang) }}
                                 </label>
                             </li>
                             <li>
                                 <label>
-                                    <input type="checkbox" name="archived" {% if filter_archived %}checked{% endif %}/>
-                                    Arhivirano
+                                    <input type="checkbox" name="archived" {% if filters["filter_archived"] %}checked{% endif %}/>
+                                    {{ "archived"|translate(lang) }}
                                 </label>
                             </li>
                             <li>
                                 <label>
-                                    <input type="checkbox" name="draft" {% if filter_draft %}checked{% endif %}/>
-                                    Osnutek
+                                    <input type="checkbox" name="draft" {% if filters["filter_draft"] %}checked{% endif %}/>
+                                    {{ "draft"|translate(lang) }}
                                 </label>
                             </li>
                         {% endif %}
@@ -127,64 +113,22 @@
                             <p></p>
                             <fieldset>
                                 <label>
-                                    <input name="teacher" type="checkbox" role="switch" {% if filter_teacher %}checked{% endif %} />
-                                    Prikaži samo izdelke, prispevane s strani učiteljev
+                                    <input name="teacher" type="checkbox" role="switch" {% if filters["filter_teacher"] %}checked{% endif %} />
+                                    {{ "show_only_teacher_products"|translate(lang) }}
                                 </label>
                             </fieldset>
                         {% endif %}
-                        <span style="padding: 5px; font-weight: bold;">Tipi izdelkov:</span>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="hat" {% if filter_hat %}checked{% endif %}/>
-                                🧢 Kapa
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="sunglasses" {% if filter_sunglasses %}checked{% endif %}/>
-                                🕶️ Sončna očala
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="men_shirts" {% if filter_men_shirts %}checked{% endif %}/>
-                                👕 Moške majice
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="women_shirts"
-                                       {% if filter_women_shirts %}checked{% endif %}/>
-                                👚 Ženske majice
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="men_pants" {% if filter_men_pants %}checked{% endif %}/>
-                                👖 Moške hlače
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="women_pants"
-                                       {% if filter_women_pants %}checked{% endif %}/>
-                                👖 Ženske hlače
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="men_shoes" {% if filter_men_shoes %}checked{% endif %}/>
-                                👞 Moški čevlji
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="checkbox" name="women_shoes"
-                                       {% if filter_women_shoes %}checked{% endif %}/>
-                                🥿 Ženski čevlji
-                            </label>
-                        </li>
-                        <button type="submit">Potrdi filtre</button>
+                        <span style="padding: 5px; font-weight: bold;">{{ "product_types"|translate(lang) }}</span>
+                        {% for c in CATEGORIES %}
+                            {% set category = PRODUCT_CATEGORIES[c] %}
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="{{ category["html_uid"] }}" {% if filters["filter_" + category["html_uid"]] %}checked{% endif %}/>
+                                    {{ category["emoji"] }} {{ category["name_" + lang] }}
+                                </label>
+                            </li>
+                        {% endfor %}
+                        <button type="submit">{{ "confirm_filters"|translate(lang) }}</button>
                     </ul>
                 </details>
             </form>
@@ -200,23 +144,7 @@
                     <div style="height: 10px"></div>
                     <h4><a href="{{ url_for('item_details', item_id=product.product_id) }}">{{ product.name }}</a></h4>
                     <h5>
-                        {% if product.category == "hat" %}
-                            🧢 Kapa
-                        {% elif product.category == "sunglasses" %}
-                            🕶️ Sončna očala
-                        {% elif product.category == "men-shirts" %}
-                            👕 Moške majice {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% elif product.category == "women-shirts" %}
-                            👚 Ženske majice {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% elif product.category == "men-pants" %}
-                            👖 Moške hlače {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% elif product.category == "women-pants" %}
-                            👖 Ženske hlače {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% elif product.category == "men-shoes" %}
-                            👞 Moški čevlji {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% elif product.category == "women-shoes" %}
-                            🥿 Ženski čevlji {% if product.size != "" %}(velikosti {{ product.size }}){% endif %}
-                        {% endif %}
+                        {{ PRODUCT_CATEGORIES[product.category]["emoji"] }} {{ PRODUCT_CATEGORIES[product.category]["name_" + lang] }} {% if PRODUCT_CATEGORIES[product.category]["has_size"] and product.size != "" %}({{ "of_size"|translate(lang) }} {{ product.size }}){% endif %}
                     </h5>
                     <div style="display: flex; flex-direction: row;">
                         <div style="border: solid 2px white; border-radius: 15px; min-width: 80px; width: 25%; height: 30px; display: flex; flex-direction: row;">
@@ -242,28 +170,28 @@
                         </div>
                         <div style="width: 10px;"></div>
                         {% if product.state == -1 %}
-                            Neznano stanje
+                            {{ "state_unknown"|translate(lang) }}
                         {% elif product.state == 100 %}
-                            Dobro stanje
+                            {{ "state_good"|translate(lang) }}
                         {% elif product.state == 200 %}
-                            Zelo dobro stanje
+                            {{ "state_great"|translate(lang) }}
                         {% elif product.state == 300 %}
-                            Odlično stanje
+                            {{ "state_excellent"|translate(lang) }}
                         {% endif %}
                     </div>
                     {% if product.teacher and (is_teacher or is_admin) %}
                         <div style="height: 10px;"></div>
-                        🧑‍🏫 Izdelek je bil prispevan s strani učitelja
+                        🧑‍🏫 {{ "product_donated_by_teacher"|translate(lang) }}
                     {% endif %}
                     <p></p>
                     {% if is_admin %}
                         <div role="group">
                             <a href="{{ url_for('archive_product', product_id=product.product_id) }}">
-                                <button style="width: 100%;">{% if product.archived %}Odarhiviraj{% else %}
-                                    Arhiviraj{% endif %}</button>
+                                <button style="width: 100%;">{% if product.archived %}{{ "unarchive"|translate(lang) }}{% else %}
+                                    {{ "archive"|translate(lang) }}{% endif %}</button>
                             </a>
                             <a href="{{ url_for('delete_product', product_id=product.product_id) }}">
-                                <button style="width: 100%;" class="secondary">Izbriši</button>
+                                <button style="width: 100%;" class="secondary">{{ "delete"|translate(lang) }}</button>
                             </a>
                         </div>
                     {% endif %}

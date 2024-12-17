@@ -1,18 +1,18 @@
 import io
 import time
+import typing
 import urllib.parse
 import uuid
 from contextlib import asynccontextmanager
 from typing import List
 
-import aiofiles
 import httpx
 import os
 
 from PIL import Image
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Form, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, delete
@@ -20,6 +20,8 @@ from starlette import status
 
 from database import get_session_user, User, connection, random_session_token, sessions, Base, engine, Product, \
     ProductImage
+from languages import SUPPORTED_LANGUAGES, TRANSLATIONS
+from product_categories import PRODUCT_CATEGORIES, CATEGORIES
 
 load_dotenv()
 
@@ -28,23 +30,30 @@ MICROSOFT_CLIENT_ID = os.environ["MICROSOFT_CLIENT_ID"]
 MICROSOFT_CLIENT_SECRET = os.environ["MICROSOFT_CLIENT_SECRET"]
 SCOPE = "https://graph.microsoft.com/User.Read"
 
-CATEGORIES = [
-    "hat",
-    "sunglasses",
-    "men-shirts",
-    "women-shirts",
-    "men-pants",
-    "women-pants",
-    "men-shoes",
-    "women-shoes",
-]
-
 ALLOWED_PRODUCT_STATES = [
     -1,
     100,
     200,
     300,
 ]
+
+def translate(text_identifier: str, lang: str) -> str:
+    if lang is None or lang == "" or lang not in SUPPORTED_LANGUAGES:
+        lang = "sl"
+    tr = TRANSLATIONS.get(text_identifier)
+    if tr is None:
+        return ""
+    if tr.get(lang) is None:
+        if tr.get("sl") is None:
+            return ""
+        return tr.get("sl")
+    return tr.get(lang)
+
+def app_context(request: Request) -> typing.Dict[str, typing.Any]:
+    lang = request.cookies.get("lang")
+    if lang is None or lang == "" or lang not in SUPPORTED_LANGUAGES:
+        lang = "sl"
+    return {"PRODUCT_CATEGORIES": PRODUCT_CATEGORIES, "lang": lang, "CATEGORIES": CATEGORIES}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,7 +67,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates", context_processors=[app_context])
+templates.env.filters["translate"] = translate
 
 def sort_by_creation_date(e: Product):
     return e.published_at
@@ -100,8 +110,11 @@ async def home(
         women_shirts: bool = False,
         men_pants: bool = False,
         women_pants: bool = False,
+        women_dress: bool = False,
+        women_skirts: bool = False,
         men_shoes: bool = False,
         women_shoes: bool = False,
+        accessories: bool = False,
         teacher: bool = False,
 ):
     user = await get_session_user(request.cookies.get("session"))
@@ -114,15 +127,29 @@ async def home(
         active = True
         archived = True
         draft = True
-    if not hat and not sunglasses and not men_shirts and not women_shirts and not men_pants and not women_pants and not men_shoes and not women_shoes:
+    if (
+            not hat and
+            not sunglasses and
+            not men_shirts and
+            not women_shirts and
+            not men_pants and
+            not women_pants and
+            not women_skirts and
+            not women_dress and
+            not men_shoes and
+            not women_shoes and
+            not accessories):
         hat = True
         sunglasses = True
         men_shirts = True
         women_shirts = True
         men_pants = True
         women_pants = True
+        women_skirts = True
+        women_dress = True
         men_shoes = True
         women_shoes = True
+        accessories = True
 
     async with connection.begin() as session:
         if is_admin:
@@ -158,9 +185,15 @@ async def home(
                 products_filtered2.append(product)
             elif women_pants and product.category == "women-pants":
                 products_filtered2.append(product)
+            elif women_skirts and product.category == "women-skirts":
+                products_filtered2.append(product)
+            elif women_dress and product.category == "women-dress":
+                products_filtered2.append(product)
             elif men_shoes and product.category == "men-shoes":
                 products_filtered2.append(product)
             elif women_shoes and product.category == "women-shoes":
+                products_filtered2.append(product)
+            elif accessories and product.category == "accessories":
                 products_filtered2.append(product)
         if sort == "":
             products_filtered2.sort(key=sort_by_modified_date, reverse=True)
@@ -186,18 +219,23 @@ async def home(
             "is_teacher": is_teacher,
             "products": products_filtered2,
             "sorting_method": sort,
-            "filter_active": active,
-            "filter_archived": archived,
-            "filter_draft": draft,
-            "filter_hat": hat,
-            "filter_sunglasses": sunglasses,
-            "filter_men_shirts": men_shirts,
-            "filter_women_shirts": women_shirts,
-            "filter_men_pants": men_pants,
-            "filter_women_pants": women_pants,
-            "filter_men_shoes": men_shoes,
-            "filter_women_shoes": women_shoes,
-            "filter_teacher": teacher,
+            "filters": {
+                "filter_active": active,
+                "filter_archived": archived,
+                "filter_draft": draft,
+                "filter_hat": hat,
+                "filter_sunglasses": sunglasses,
+                "filter_men_shirts": men_shirts,
+                "filter_women_shirts": women_shirts,
+                "filter_men_pants": men_pants,
+                "filter_women_pants": women_pants,
+                "filter_women_skirts": women_skirts,
+                "filter_women_dress": women_dress,
+                "filter_men_shoes": men_shoes,
+                "filter_women_shoes": women_shoes,
+                "filter_accessories": accessories,
+                "filter_teacher": teacher,
+            },
         }
     )
 
@@ -213,8 +251,11 @@ async def home_post(
         women_shirts: bool = Form(False),
         men_pants: bool = Form(False),
         women_pants: bool = Form(False),
+        women_skirts: bool = Form(False),
+        women_dress: bool = Form(False),
         men_shoes: bool = Form(False),
         women_shoes: bool = Form(False),
+        accessories: bool = Form(False),
         teacher: bool = Form(False),
 ):
     encode = {
@@ -226,6 +267,8 @@ async def home_post(
         encode["archived"] = True
     if draft:
         encode["draft"] = True
+    if accessories:
+        encode["accessories"] = True
     if hat:
         encode["hat"] = True
     if sunglasses:
@@ -238,6 +281,10 @@ async def home_post(
         encode["men_pants"] = True
     if women_pants:
         encode["women_pants"] = True
+    if women_skirts:
+        encode["women_skirts"] = True
+    if women_dress:
+        encode["women_dress"] = True
     if men_shoes:
         encode["men_shoes"] = True
     if women_shoes:
@@ -581,6 +628,15 @@ async def set_image_default(request: Request, image_id: str):
         product.default_image_id = image_id
 
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/language")
+async def set_language(lang: str = "sl"):
+    redirect_response = RedirectResponse(app.url_path_for("home"))
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "sl"
+    redirect_response.set_cookie(key="lang", value=lang, httponly=True, secure=True)
+    return redirect_response
 
 
 @app.get("/logout")

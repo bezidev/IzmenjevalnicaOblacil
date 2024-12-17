@@ -1,13 +1,19 @@
 <nav>
     <ul>
-        <li><strong><a href="{{ url_for('home') }}" class="no-link">Izmenjevalnica oblačil GIMB</a></strong></li>
+        <li><strong><a href="{{ url_for('home') }}" class="no-link">{{ "gimb_clothing_exchange"|translate(lang) }}</a> (<a href="{{"/language?lang=" + ("sl" if lang == "en" else "en") }}">
+            {% if lang == "sl" %}
+                EN
+            {% else %}
+                SL
+            {% endif %}
+        </a>)</strong></li>
     </ul>
     <ul>
         {% if name == None or name == "" %}
-            <li><a href="{{ url_for('microsoft_login_redirect') }}">Prijava kot administrator</a></li>
+            <li><a href="{{ url_for('microsoft_login_redirect') }}">{{ "sign_in"|translate(lang) }}</a></li>
         {% else %}
-            <li>{{ name }} ({% if is_admin %}Administrator; {% endif %}<a href="{{ url_for('logout') }}">Odjava</a>)</li>
+            <li>{{ name }} ({% if is_admin %}{{ "administrator"|translate(lang) }}; {% endif %}<a href="{{ url_for('logout') }}">{{ "logout"|translate(lang) }}</a>)</li>
         {% endif %}
-        <li><a href="{{ url_for('about_project') }}">O projektu</a></li>
+        <li><a href="{{ url_for('about_project') }}">{{ "about_project"|translate(lang) }}</a></li>
     </ul>
 </nav>

@@ -165,38 +165,22 @@
             <div>
                 {% if product.draft %}
                     <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: yellow;">
-                        <h3 style="color: black !important;">Izdelek je še osnutek!</h3>
+                        <h3 style="color: black !important;">{{ "product_is_draft"|translate(lang) }}</h3>
                     </div>
                     <br>
                 {% endif %}
                 {% if product.archived %}
                     <div style="border-radius: 20px; padding: 10px 10px 1px 10px; background-color: red;">
-                        <h3 style="color: black !important;">Izdelek je arhiviran!</h3>
+                        <h3 style="color: black !important;">{{ "product_is_archived"|translate(lang) }}</h3>
                     </div>
                     <br>
                 {% endif %}
                 <h1>{{ product.name }}</h1>
                 <h3>
-                    {% if product.category == "hat" %}
-                        🧢 Kapa
-                    {% elif product.category == "sunglasses" %}
-                        🕶️ Sončna očala
-                    {% elif product.category == "men-shirts" %}
-                        👕 Moške majice
-                    {% elif product.category == "women-shirts" %}
-                        👚 Ženske majice
-                    {% elif product.category == "men-pants" %}
-                        👖 Moške hlače
-                    {% elif product.category == "women-pants" %}
-                        👖 Ženske hlače
-                    {% elif product.category == "men-shoes" %}
-                        👞 Moški čevlji
-                    {% elif product.category == "women-shoes" %}
-                        🥿 Ženski čevlji
-                    {% endif %}
+                    {{ PRODUCT_CATEGORIES[product.category]["emoji"] }} {{ PRODUCT_CATEGORIES[product.category]["name_" + lang] }}
                 </h3>
                 {% if product.size != "" %}
-                    Velikost izdelka: <b>{{ product.size }}</b>
+                    {{ "product_size"|translate(lang) }} <b>{{ product.size }}</b>
                 {% endif %}
                 <div style="display: flex; flex-direction: row;">
                     <div style="border: solid 2px white; border-radius: 15px; min-width: 80px; width: 25%; height: 30px; display: flex; flex-direction: row;">
@@ -222,32 +206,33 @@
                     </div>
                     <div style="width: 10px;"></div>
                     {% if product.state == -1 %}
-                        Neznano stanje
+                        {{ "state_unknown"|translate(lang) }}
                     {% elif product.state == 100 %}
-                        Dobro stanje
+                        {{ "state_good"|translate(lang) }}
                     {% elif product.state == 200 %}
-                        Zelo dobro stanje
+                        {{ "state_great"|translate(lang) }}
                     {% elif product.state == 300 %}
-                        Odlično stanje
+                        {{ "state_excellent"|translate(lang) }}
                     {% endif %}
                 </div>
                 {% if product.teacher and (is_teacher or is_admin) %}
                     <div style="height: 10px;"></div>
-                    🧑‍🏫 Izdelek je bil prispevan s strani učitelja
+                    🧑‍🏫 {{ "product_donated_by_teacher"|translate(lang) }}
                 {% endif %}
                 <p></p>
                 <div>
                     {% if product.description != "" %}
-                        <h4>Opis:</h4>
+                        <h4>{{ "description"|translate(lang) }}</h4>
                     {% endif %}
                     <div style="overflow-y: scroll; height: 100%;">
                         <div id="description"></div>
                     </div>
                 </div>
                 {% if is_admin %}
-                    <a href="{{ url_for('product_edit', product_id=product.product_id) }}"><button>Uredi</button></a>
-                    <a href="{{ url_for('archive_product', product_id=product.product_id) }}"><button>{% if product.archived %}Odarhiviraj{% else %}Arhiviraj{% endif %}</button></a>
-                    <a href="{{ url_for('delete_product', product_id=product.product_id) }}"><button class="secondary">Izbriši</button></a>
+                    <a href="{{ url_for('product_edit', product_id=product.product_id) }}"><button>{{ "edit"|translate(lang) }}</button></a>
+                    <a href="{{ url_for('archive_product', product_id=product.product_id) }}"><button>{% if product.archived %}{{ "unarchive"|translate(lang) }}{% else %}{{ "archive"|translate(lang) }}{% endif %}</button></a>
+                    <a href="{{ url_for('delete_product', product_id=product.product_id) }}"><button class="secondary">
+                        {{ "delete"|translate(lang) }}</button></a>
                 {% endif %}
             </div>
         </div>
