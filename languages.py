@@ -262,6 +262,10 @@ TRANSLATIONS: dict[str, dict] = {
     "sign_in": {
         "en": "Administrator sign in",
         "sl": "Prijava kot administrator",
+    },
+    "no_results": {
+        "en": "There were no results found for your query.",
+        "sl": "Za vaše iskanje ni zadetkov.",
     }
 }
 
