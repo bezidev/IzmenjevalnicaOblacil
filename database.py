@@ -1,5 +1,6 @@
 import base64
 import os
+import time
 
 from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -17,6 +18,7 @@ class User(Base):
     email = Column(String(100), unique=True)
     first_name = Column(String(100))
     surname = Column(String(100))
+    credits = Column(Integer)
     session_token = Column(String(200), nullable=True, unique=True)
     is_admin = Column(Boolean)
     is_teacher = Column(Boolean, default=False)
@@ -28,6 +30,8 @@ class Product(Base):
     description = Column(String)
     category = Column(String(100))
     size = Column(String(100))
+    color = Column(String(25))
+    material = Column(String(25))
     default_image_id = Column(String(50))
     archived = Column(Boolean)
     teacher = Column(Boolean)
@@ -47,30 +51,28 @@ class ProductImage(Base):
     position = Column(Integer)
     product_id = Column(String(50))
 
-# Lokalni "cache" sessionov, da ne potrebujemo vedno znova zahtevati uporabnika od podatkovne baze
-sessions: dict[str, User] = {}
+class UserSession:
+    def __init__(self, user: User, microsoft_token: str, microsoft_token_expiry: int):
+        self.user = user
+        self.microsoft_token = microsoft_token
+        self.microsoft_token_expiry = microsoft_token_expiry
 
-async def get_session_user(session_token: str | None) -> User | None:
+# Lokalni "cache" sessionov, da ne potrebujemo vedno znova zahtevati uporabnika od podatkovne baze
+sessions: dict[str, UserSession] = {}
+
+def get_session_user(session_token: str | None) -> UserSession | None:
     if session_token == "" or session_token is None:
         return None
 
     # Pogledamo v cache, če je uporabnik že tam
-    if sessions.get(session_token) is not None:
-        return sessions.get(session_token)
+    # Če uporabnika ni v cachu, žal moramo uporabnika prisiliti v ponovno prijavo, da pridobimo nov Microsoft auth token.
+    user = sessions.get(session_token)
+    if user is None:
+        return None
 
-    # Uporabnika torej ni v cachu, pogledamo v podatkovno bazo
-    async with connection.begin() as session:
-        result = (await session.execute(select(User).filter_by(session_token=session_token))).one_or_none()
-        if result is None:
-            # Takega uporabnika ni v podatkovni bazi
-            return None
-        else:
-            result = result[0]
-
-        # Uporabnik je v podatkovni bazi, dodajmo ga v cache
-        sessions[session_token] = result
-
-    return result
+    if user.microsoft_token_expiry < time.time():
+        return None
+    return user
 
 def random_session_token() -> str:
     return base64.b64encode(os.urandom(64)).decode()

@@ -46,6 +46,20 @@
                 </select>
             {% endif %}
         </div>
+        <div class="shared-width">
+            <select name="color" aria-label="{{ "select_color"|translate(lang) }}">
+                <option value="">{{ "select_color"|translate(lang) }}</option>
+                {% for color in COLORS %}
+                    <option value="{{ color }}" {% if product.color == color %}selected{% endif %}>{{ color|translate(lang) }}</option>
+                {% endfor %}
+            </select>
+            <select name="material" aria-label="{{ "select_material"|translate(lang) }}">
+                <option value="">{{ "select_material"|translate(lang) }}</option>
+                {% for material in MATERIALS %}
+                    <option value="{{ material }}" {% if product.material == material %}selected{% endif %}>{{ material|translate(lang) }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <select name="state" aria-label="{{ "product_state"|translate(lang) }}">
             <option value="-1" {% if product.state == -1 %}selected{% endif %}>{{ "product_state_unknown"|translate(lang) }}</option>
             <option value="100" {% if product.state == 100 %}selected{% endif %}>

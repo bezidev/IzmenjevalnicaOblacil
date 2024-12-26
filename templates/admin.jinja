@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'head.jinja' %}
+</head>
+<body>
+<main class="container">
+    {% include 'navbar.jinja' %}
+    <h1>{{ "administrator_overview"|translate(lang) }}</h1>
+    <h2>{{ "add_new_user"|translate(lang) }}</h2>
+    <form method="post" action="{{ url_for('admin') }}">
+        <input type="search" name="user_name" placeholder="{{ "search_user"|translate(lang) }}"
+               aria-label="{{ "search_user"|translate(lang) }}"/>
+    </form>
+    <p></p>
+    {% if search_results != None %}
+        <ul>
+            {% for user in search_results %}
+                <li>
+                    <a href="{{ url_for('admin_user_account_create', user_id=user['id']) }}">{{ user["displayName"] }}</a>
+                    ({{ user["mail"] }}{% if user["department"] != None %}, {{ user["department"] }}{% endif %})
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <h2>{{ "user_overview"|translate(lang) }}</h2>
+    <table>
+        <thead>
+        <tr>
+            <th scope="col">{{ "first_name"|translate(lang) }}</th>
+            <th scope="col">{{ "surname"|translate(lang) }}</th>
+            <th scope="col">{{ "email"|translate(lang) }}</th>
+            <th scope="col">{{ "credits"|translate(lang) }}</th>
+            <th scope="col">{{ "is_admin"|translate(lang) }}</th>
+            <th scope="col">{{ "is_teacher"|translate(lang) }}</th>
+            <th scope="col">{{ "save"|translate(lang) }}</th>
+            <th scope="col">{{ "delete_user"|translate(lang) }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <th scope="col">{{ user.first_name }}</th>
+                <th scope="col">{{ user.surname }}</th>
+                <th scope="col">{{ user.email }}</th>
+                <form action="{{ url_for('admin_user_manage_post', user_id=user.user_id) }}" method="post">
+                    <th scope="col">
+                        <input type="number" name="credits" placeholder="{{ "credits"|translate(lang) }}"
+                               aria-label="{{ "credits"|translate(lang) }}" value="{{ user.credits }}"
+                               style="margin-bottom: 0 !important;">
+                    </th>
+                    <th scope="col">
+                        <input type="checkbox" id="admin" name="admin" {% if user.is_admin %}checked{% endif %}/>
+                    </th>
+                    <th scope="col">
+                        <input type="checkbox" id="teacher" name="teacher" {% if user.is_teacher %}checked{% endif %}/>
+                    </th>
+                    <th scope="col">
+                        <button type="submit">{{ "save"|translate(lang) }}</button>
+                    </th>
+                </form>
+                <dialog id="delete-{{ user.user_id }}">
+                    <article>
+                        <header>
+                            <button aria-label="{{ "close"|translate(lang) }}" rel="prev" onclick="document.getElementById('delete-{{ user.user_id }}').close()"></button>
+                            <p>
+                                <strong>⚠️ {{ "destructive_action"|translate(lang) }}</strong>
+                            </p>
+                        </header>
+                        <p>
+                            {{ "deleting_user_destructive_action"|translate(lang) }}
+                        </p>
+                        <footer>
+                            <div style="display: flex;">
+                                <button class="secondary" style="flex: 1 1 0; height: 100%;" onclick="document.getElementById('delete-{{ user.user_id }}').close()">{{ "cancel"|translate(lang) }}</button>
+                                <form action="{{ url_for('admin_user_delete_post', user_id=user.user_id) }}" method="post">
+                                    <button style="flex: 1 1 0; height: 100%;" type="submit">{{ "delete_user"|translate(lang) }}</button>
+                                </form>
+                            </div>
+                        </footer>
+                    </article>
+                </dialog>
+                <th scope="col">
+                    <button type="submit" style="background-color: red !important;"
+                            onclick="document.getElementById('delete-{{ user.user_id }}').showModal()">{{ "delete_user"|translate(lang) }}</button>
+                </th>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

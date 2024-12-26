@@ -260,8 +260,161 @@ TRANSLATIONS: dict[str, dict] = {
         "sl": "Splošni podatki o izdelku",
     },
     "sign_in": {
-        "en": "Administrator sign in",
-        "sl": "Prijava kot administrator",
+        "en": "Sign in",
+        "sl": "Prijava",
+    },
+    "administrator_overview": {
+        "en": "Administrator overview",
+        "sl": "Administratorski pogled",
+    },
+    "first_name": {
+        "en": "First name",
+        "sl": "Ime",
+    },
+    "surname": {
+        "en": "Surname",
+        "sl": "Priimek",
+    },
+    "is_admin": {
+        "en": "Administrator",
+        "sl": "Administrator",
+    },
+    "is_teacher": {
+        "en": "Teacher",
+        "sl": "Učitelj",
+    },
+    "credits": {
+        "en": "Credits",
+        "sl": "Krediti",
+    },
+    "save": {
+        "en": "Save",
+        "sl": "Shrani",
+    },
+    "delete_user": {
+        "en": "Delete user",
+        "sl": "Izbriši uporabniški profil",
+    },
+    "email": {
+        "en": "E-mail",
+        "sl": "Elektronski naslov"
+    },
+    "user_overview": {
+        "en": "User overview",
+        "sl": "Uporabniški pregled",
+    },
+    "add_new_user": {
+        "en": "Add a new user",
+        "sl": "Dodaj novega uporabnika",
+    },
+    "search_user": {
+        "en": "Search for an user",
+        "sl": "Išči za uporabnika",
+    },
+    "close": {
+        "en": "Close",
+        "sl": "Zapri",
+    },
+    "destructive_action": {
+        "en": "Destructive action!",
+        "sl": "Nevarna dejavnost!",
+    },
+    "deleting_user_destructive_action": {
+        "en": "Deleting a user is a potentially destructive action. Do you wish to continue?",
+        "sl": "Izbris uporabnika je potencialno nevarna dejavnost. Ali res želite nadaljevati s tem dejanjem?",
+    },
+    "cancel": {
+        "en": "Cancel",
+        "sl": "Prekliči",
+    },
+    "red": {
+        "en": "🟥 Red",
+        "sl": "🟥 Rdeča",
+    },
+    "orange": {
+        "en": "🟧 Orange",
+        "sl": "🟧 Oranžna",
+    },
+    "yellow": {
+        "en": "🟧 Yellow",
+        "sl": "🟧 Rumena",
+    },
+    "green": {
+        "en": "🟩 Green",
+        "sl": "🟩 Zelena",
+    },
+    "cyan": {
+        "en": "🔷 Cyan",
+        "sl": "🔷 Sinje modra",
+    },
+    "blue": {
+        "en": "🟦 Blue",
+        "sl": "🟦 Modra",
+    },
+    "pink": {
+        "en": "🌸 Pink",
+        "sl": "🌸 Roza",
+    },
+    "purple": {
+        "en": "🟪 Purple",
+        "sl": "🟪 Vijolična",
+    },
+    "white": {
+        "en": "⬜ White",
+        "sl": "⬜ Bela",
+    },
+    "black": {
+        "en": "⬛ Black",
+        "sl": "⬛ Črna",
+    },
+
+    "cotton": {
+        "en": "Cotton",
+        "sl": "Bombaž",
+    },
+    "kapok": {
+        "en": "Kapok",
+        "sl": "Kapok",
+    },
+    "hemp": {
+        "en": "Hemp",
+        "sl": "Konoplja",
+    },
+    "flax": {
+        "en": "Flax",
+        "sl": "Lan",
+    },
+    "wool": {
+        "en": "Wool",
+        "sl": "Volna",
+    },
+    "mohair": {
+        "en": "Mohair",
+        "sl": "Mohar",
+    },
+    "silk": {
+        "en": "Silk",
+        "sl": "Svila",
+    },
+    "feathers": {
+        "en": "Feathers (such as duck/goose)",
+        "sl": "Perje (npr. račje/gosje)",
+    },
+    "polyester": {
+        "en": "Polyester",
+        "sl": "Poliester",
+    },
+    "spandex": {
+        "en": "Spandex",
+        "sl": "Elastan",
+    },
+    "select_color": {
+        "en": "Select a color",
+        "sl": "Izberite barvo",
+    },
+    "select_material": {
+        "en": "Select the material",
+        "sl": "Izberite material",
     }
 }
 

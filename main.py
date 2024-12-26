@@ -19,16 +19,16 @@ from sqlalchemy import select, delete
 from starlette import status
 
 from database import get_session_user, User, connection, random_session_token, sessions, Base, engine, Product, \
-    ProductImage
+    ProductImage, UserSession
 from languages import SUPPORTED_LANGUAGES, TRANSLATIONS
-from product_categories import PRODUCT_CATEGORIES, CATEGORIES
+from product_categories import PRODUCT_CATEGORIES, CATEGORIES, MATERIALS, COLORS
 
 load_dotenv()
 
 # Poberemo skrivne vrednosti iz okoljskih spremenljivk
 MICROSOFT_CLIENT_ID = os.environ["MICROSOFT_CLIENT_ID"]
 MICROSOFT_CLIENT_SECRET = os.environ["MICROSOFT_CLIENT_SECRET"]
-SCOPE = "https://graph.microsoft.com/User.Read"
+SCOPE = "https://graph.microsoft.com/User.Read https://graph.microsoft.com/User.ReadBasic.All"
 
 ALLOWED_PRODUCT_STATES = [
     -1,
@@ -53,7 +53,20 @@ def app_context(request: Request) -> typing.Dict[str, typing.Any]:
     lang = request.cookies.get("lang")
     if lang is None or lang == "" or lang not in SUPPORTED_LANGUAGES:
         lang = "sl"
-    return {"PRODUCT_CATEGORIES": PRODUCT_CATEGORIES, "lang": lang, "CATEGORIES": CATEGORIES}
+    user = get_session_user(request.cookies.get("session"))
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
+    is_admin = False if user is None else user.user.is_admin
+    is_teacher = False if user is None else user.user.is_teacher
+    return {
+        "PRODUCT_CATEGORIES": PRODUCT_CATEGORIES,
+        "lang": lang,
+        "CATEGORIES": CATEGORIES,
+        "COLORS": COLORS,
+        "MATERIALS": MATERIALS,
+        "name": name,
+        "is_admin": is_admin,
+        "is_teacher": is_teacher,
+    }
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -117,15 +130,15 @@ async def home(
         accessories: bool = False,
         teacher: bool = False,
 ):
-    user = await get_session_user(request.cookies.get("session"))
-    name = f"{user.first_name} {user.surname}" if user is not None else None
-    is_admin = False if user is None else user.is_admin
-    is_teacher = False if user is None else user.is_teacher
+    user = get_session_user(request.cookies.get("session"))
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
+    is_admin = False if user is None else user.user.is_admin
+    is_teacher = False if user is None else user.user.is_teacher
 
     # Če je vse uncheckano, checkamo zadeve
     if not active and not archived and not draft:
         active = True
-        archived = True
+        archived = False
         draft = True
     if (
             not hat and
@@ -296,19 +309,19 @@ async def home_post(
 
 @app.get("/about")
 async def about_project(request: Request):
-    user = await get_session_user(request.cookies.get("session"))
-    name = f"{user.first_name} {user.surname}" if user is not None else None
-    is_admin = False if user is None else user.is_admin
+    user = get_session_user(request.cookies.get("session"))
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
+    is_admin = False if user is None else user.user.is_admin
     return templates.TemplateResponse(
         request=request, name="about.jinja", context={"name": name, "is_admin": is_admin}
     )
 
 @app.get("/item/{item_id}")
 async def item_details(request: Request, item_id: str):
-    user = await get_session_user(request.cookies.get("session"))
-    name = f"{user.first_name} {user.surname}" if user is not None else None
-    is_admin = False if user is None else user.is_admin
-    is_teacher = False if user is None else user.is_teacher
+    user = get_session_user(request.cookies.get("session"))
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
+    is_admin = False if user is None else user.user.is_admin
+    is_teacher = False if user is None else user.user.is_teacher
     async with connection.begin() as session:
         product = (await session.execute(select(Product).filter_by(product_id=item_id))).one_or_none()
         if product is None:
@@ -326,10 +339,10 @@ async def item_details(request: Request, item_id: str):
 
 @app.get("/item/{product_id}/edit")
 async def product_edit(request: Request, product_id: str):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
-    name = f"{user.first_name} {user.surname}" if user is not None else None
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
     async with connection.begin() as session:
         product = (await session.execute(select(Product).filter_by(product_id=product_id))).one_or_none()
         if product is None:
@@ -343,18 +356,18 @@ async def product_edit(request: Request, product_id: str):
 
 @app.get("/admin/new_product")
 async def new_product(request: Request):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
-    name = f"{user.first_name} {user.surname}" if user is not None else None
+    name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
     return templates.TemplateResponse(
         request=request, name="new_product.jinja", context={"name": name, "is_admin": True}
     )
 
 @app.post("/admin/new_product")
 async def new_product_post(request: Request, name: str = Form(""), description: str = Form(""), category: str = Form("")):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
     if len(name) < 3:
         return RedirectResponse(app.url_path_for("new_product"))
@@ -375,18 +388,32 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
             teacher=False,
             limit_to_teachers=False,
             state=-1,
-            published_by=user.user_id,
+            color="",
+            material="",
+            published_by=user.user.user_id,
             published_at=t,
-            last_edited_by=user.user_id,
+            last_edited_by=user.user.user_id,
             last_edited_at=t,
         )
         session.add(product)
     return RedirectResponse(app.url_path_for("product_edit", product_id=uid), status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/item/{product_id}/edit")
-async def product_edit_post(request: Request, product_id: str, name: str = Form(""), description: str = Form(""), category: str = Form(""), size: str = Form(""), state: int = Form(-1), archived: bool = Form(False), teacher: bool = Form(False), limit_to_teachers: bool = Form(False), draft: bool = Form(False)):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+async def product_edit_post(request: Request,
+                            product_id: str,
+                            name: str = Form(""),
+                            description: str = Form(""),
+                            category: str = Form(""),
+                            size: str = Form(""),
+                            material: str = Form(""),
+                            color: str = Form(""),
+                            state: int = Form(-1),
+                            archived: bool = Form(False),
+                            teacher: bool = Form(False),
+                            limit_to_teachers: bool = Form(False),
+                            draft: bool = Form(False)):
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
     if len(name) < 3:
         return RedirectResponse(app.url_path_for("new_product"))
@@ -410,15 +437,19 @@ async def product_edit_post(request: Request, product_id: str, name: str = Form(
             pi.limit_to_teachers = False
         if state in ALLOWED_PRODUCT_STATES:
             pi.state = state
+        if material == "" or material in MATERIALS:
+            pi.material = material
+        if color == "" or color in COLORS:
+            pi.color = color
         pi.draft = draft
-        pi.last_edited_by = user.user_id
+        pi.last_edited_by = user.user.user_id
         pi.last_edited_at = int(time.time())
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/item/{product_id}/delete")
 async def delete_product(request: Request, product_id: str):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
     async with connection.begin() as session:
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=product_id))).all()
@@ -434,22 +465,22 @@ async def delete_product(request: Request, product_id: str):
 
 @app.get("/item/{product_id}/archive")
 async def archive_product(request: Request, product_id: str):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
     async with connection.begin() as session:
         product = (await session.execute(select(Product).filter_by(product_id=product_id))).one()
         product = product[0]
         product.archived = not product.archived
-        product.last_edited_by = user.user_id
+        product.last_edited_by = user.user.user_id
         product.last_edited_at = int(time.time())
     return RedirectResponse(app.url_path_for("item_details", item_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/item/{product_id}/upload_image")
 async def upload_image(request: Request, product_id: str, file: UploadFile, description: str = Form("")):
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
     async with connection.begin() as session:
         uid = str(uuid.uuid4())
@@ -477,8 +508,8 @@ async def upload_image(request: Request, product_id: str, file: UploadFile, desc
 @app.get("/image/{image_id}/delete")
 async def delete_image(request: Request, image_id: str):
     # Prvo preverimo, da ima uporabnik veljaven session in je administrator
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
 
     # Zaženemo povezavo s podatkovno bazo
@@ -527,11 +558,106 @@ async def delete_image(request: Request, image_id: str):
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
 
 
+@app.get("/admin/panel")
+@app.post("/admin/panel")
+async def admin(request: Request, user_name: str = Form("")):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+
+    search_results = None
+    if request.method.lower() == "post":
+        user_name = urllib.parse.quote_plus(user_name)
+        async with httpx.AsyncClient() as client:
+            client.headers = {"Authorization": f"Bearer {user.microsoft_token}", "ConsistencyLevel": "eventual"}
+            url = f"https://graph.microsoft.com/v1.0/users?$count=true&$search=\"displayName:{user_name}\"&$orderBy=displayName&$select=id,displayName,mail,userPrincipalName,department"
+            user_response = await client.get(url)
+            #print(client.headers["Authorization"], user_response.status_code, url, user_response.json())
+            if user_response.status_code == 200:
+                search_results = user_response.json()["value"]
+                #print(search_results)
+    async with connection.begin() as session:
+        users = (await session.execute(select(User).order_by(User.surname))).all()
+        users: List[User] = [user[0] for user in users]
+    return templates.TemplateResponse(
+        request=request, name="admin.jinja", context={
+            "users": users,
+            "search_results": search_results,
+        }
+    )
+
+
+@app.post("/admin/user/{user_id}/manage")
+async def admin_user_manage_post(request: Request, user_id: str, credits: int = Form(0), admin: bool = Form(False), teacher: bool = Form(False)):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+
+    async with connection.begin() as session:
+        user = (await session.execute(select(User).filter_by(user_id=user_id))).one_or_none()
+        if user is None:
+            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+        user = user[0]
+        user.credits = credits
+        user.is_admin = admin
+        user.is_teacher = teacher
+    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.post("/admin/user/{user_id}/delete")
+async def admin_user_delete_post(request: Request, user_id: str):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+    async with connection.begin() as session:
+        await session.execute(delete(User).filter_by(user_id=user_id))
+    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/admin/user/{user_id}/create")
+async def admin_user_account_create(request: Request, user_id: str):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+    user_id = urllib.parse.quote_plus(user_id)
+    async with httpx.AsyncClient() as client:
+        client.headers = {"Authorization": f"Bearer {user.microsoft_token}"}
+        user_response = await client.get(f"https://graph.microsoft.com/v1.0/users/{user_id}")
+        if user_response.status_code != 200:
+            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+        response = user_response.json()
+        is_teacher = "@gimb.org" in response["mail"]  # dijaki imajo @dijaki.gimb.org mejl. Torej lahko zdeduciramo, da so @gimb.org naslovi rezervirani za učitelje
+        first_name: str = response["givenName"]  # Ime
+        surname: str = response["surname"]  # Priimek
+        user_principal_name: str = response["userPrincipalName"]  # @gimb.org elektronski naslov
+        user_id: str = response["id"]  # Uporabniški ID, kakršen je določen za uporabnika v Azure Active Direktoriju (oz. zdaj Microsoft Entra ID)
+    async with connection.begin() as session:
+        u = (await session.execute(select(User).filter_by(user_id=user_id))).one_or_none()
+        if u is not None:
+            return RedirectResponse(app.url_path_for("admin"))
+        u = User(
+            user_id=user_id,
+            email=user_principal_name,
+            first_name=first_name,
+            surname=surname,
+            credits=0,
+            session_token=None,
+            is_admin=False,
+            is_teacher=is_teacher,
+        )
+        session.add(u)
+    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+
+
 @app.get("/image/{image_id}/move/{up_down}")
 async def move_image_up_down(request: Request, image_id: str, up_down: str):
     # Prvo preverimo, da ima uporabnik veljaven session in je administrator
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
 
     if up_down != "up" and up_down != "down":
@@ -596,8 +722,8 @@ async def move_image_up_down(request: Request, image_id: str, up_down: str):
 @app.get("/image/{image_id}/default")
 async def set_image_default(request: Request, image_id: str):
     # Prvo preverimo, da ima uporabnik veljaven session in je administrator
-    user = await get_session_user(request.cookies.get("session"))
-    if user is None or not user.is_admin:
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
 
     # Zaženemo povezavo s podatkovno bazo
@@ -644,11 +770,11 @@ async def logout(request: Request):
     redirect_response = RedirectResponse(app.url_path_for("home"))
     redirect_response.set_cookie(key="session", value="", httponly=True, secure=True)
 
-    user = await get_session_user(request.cookies.get("session"))
+    user = get_session_user(request.cookies.get("session"))
     if user is None:
         return redirect_response
     async with connection.begin() as session:
-        result = (await session.execute(select(User).filter_by(user_id=user.user_id))).one_or_none()
+        result = (await session.execute(select(User).filter_by(user_id=user.user.user_id))).one_or_none()
         if result is None:
             # Takega uporabnika ni v podatkovni bazi
             return redirect_response
@@ -689,6 +815,7 @@ async def microsoft_login_callback(request: Request, code: str):
             return RedirectResponse(app.url_path_for("home") + "?login_success=False")
 
         # Uspešno smo pridobili avtorizacijski token, zdaj lahko v imenu uporabnika izvajamo zahtevke na Microsoftovem API-ju.
+        expires_on = int(time.time()) + int(login_response.json()["expires_in"]) # Čas, ki nam ga posreduje Microsoft, je v sekundah.
         access_token = login_response.json()["access_token"]
         client.headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -722,6 +849,7 @@ async def microsoft_login_callback(request: Request, code: str):
                 email=user_principal_name,
                 first_name=first_name,
                 surname=surname,
+                credits=0,
                 session_token=None,
                 is_admin=False,
                 is_teacher=is_teacher,
@@ -742,7 +870,7 @@ async def microsoft_login_callback(request: Request, code: str):
         redirect_response.set_cookie(key="session", value=user.session_token, httponly=True, secure=True)
 
         # Ta session token shranimo v cache
-        sessions[user.session_token] = user
+        sessions[user.session_token] = UserSession(user, access_token, expires_on)
 
         # Na koncu se vse avtomatično comitta v podatkovno bazo
 

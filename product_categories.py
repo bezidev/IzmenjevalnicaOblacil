@@ -78,3 +78,29 @@ PRODUCT_CATEGORIES = {
     },
 }
 CATEGORIES = list(PRODUCT_CATEGORIES.keys())
+
+COLORS = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "cyan",
+    "blue",
+    "pink",
+    "purple",
+    "white",
+    "black",
+]
+
+MATERIALS = [
+    "cotton", # Bombaž
+    "kapok", # Kapok
+    "hemp", # Konoplja
+    "flax", # Lan
+    "wool", # Volna
+    "mohair", # Mohar
+    "silk", # Svila
+    "feathers", # Perje (npr. rac/gosi)
+    "polyester", # Poliester
+    "spandex", # Elastan
+]

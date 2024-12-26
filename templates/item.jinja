@@ -182,6 +182,9 @@
                 {% if product.size != "" %}
                     {{ "product_size"|translate(lang) }} <b>{{ product.size }}</b>
                 {% endif %}
+                <p></p>
+                {% if product.color != "" %}{{ product.color|translate(lang) }}{% if product.material != "" %}, {% endif %}{% endif %}{% if product.material != "" %}<b>{{ product.material|translate(lang) }}</b>{% endif %}
+                <p></p>
                 <div style="display: flex; flex-direction: row;">
                     <div style="border: solid 2px white; border-radius: 15px; min-width: 80px; width: 25%; height: 30px; display: flex; flex-direction: row;">
                         <div style="align-content: center; width: 100%;">

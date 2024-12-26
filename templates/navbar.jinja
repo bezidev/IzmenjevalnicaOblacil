@@ -12,7 +12,7 @@
         {% if name == None or name == "" %}
             <li><a href="{{ url_for('microsoft_login_redirect') }}">{{ "sign_in"|translate(lang) }}</a></li>
         {% else %}
-            <li>{{ name }} ({% if is_admin %}{{ "administrator"|translate(lang) }}; {% endif %}<a href="{{ url_for('logout') }}">{{ "logout"|translate(lang) }}</a>)</li>
+            <li>{{ name }} ({% if is_admin %}<a href="{{ url_for('admin') }}">{{ "administrator"|translate(lang) }}</a>; {% endif %}{% if is_teacher %}{{ "teacher"|translate(lang) }}; {% endif %}<a href="{{ url_for('logout') }}">{{ "logout"|translate(lang) }}</a>)</li>
         {% endif %}
         <li><a href="{{ url_for('about_project') }}">{{ "about_project"|translate(lang) }}</a></li>
     </ul>
