@@ -263,6 +263,10 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "Sign in",
         "sl": "Prijava",
     },
+    "no_results": {
+        "en": "There were no results found for your query.",
+        "sl": "Za vaše iskanje ni zadetkov.",
+    },
     "administrator_overview": {
         "en": "Administrator overview",
         "sl": "Administratorski pogled",
@@ -415,7 +419,7 @@ TRANSLATIONS: dict[str, dict] = {
     "select_material": {
         "en": "Select the material",
         "sl": "Izberite material",
-    }
+    },
 }
 
 SUPPORTED_LANGUAGES = [
