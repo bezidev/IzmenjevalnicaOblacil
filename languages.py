@@ -420,6 +420,10 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "Select the material",
         "sl": "Izberite material",
     },
+    "teacher": {
+        "en": "Teacher",
+        "sl": "Učitelj",
+    }
 }
 
 SUPPORTED_LANGUAGES = [
