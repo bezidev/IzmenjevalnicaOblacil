@@ -137,7 +137,7 @@
                 {% for image in product_images %}
                     <div class="slide fade">
                         <div class="image-container">
-                            <img src="/uploads/images/{{ image.image_id }}.webp" alt="{{ image.description }}">
+                            <img src="/uploads/images/{{ image.image_id }}.webp?t={{ time }}" alt="{{ image.description }}">
                         </div>
                     </div>
                 {% endfor %}

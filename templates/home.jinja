@@ -139,7 +139,7 @@
             {% for product in products %}
                 <div class="grid-element">
                     <div class="image-container">
-                        <img alt="{{ product.description }}" src="/uploads/images/{{ product.default_image_id }}-small.webp">
+                        <img alt="{{ product.description }}" src="/uploads/images/{{ product.default_image_id }}-small.webp?t={% if product.draft %}{{ time }}{% else %}0{% endif %}">
                     </div>
                     <div style="height: 10px"></div>
                     <h4><a href="{{ url_for('item_details', item_id=product.product_id) }}">{{ product.name }}</a></h4>

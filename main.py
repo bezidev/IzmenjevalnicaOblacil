@@ -249,6 +249,7 @@ async def home(
                 "filter_accessories": accessories,
                 "filter_teacher": teacher,
             },
+            "time": int(time.time()),
         }
     )
 
@@ -334,7 +335,7 @@ async def item_details(request: Request, item_id: str):
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=item_id).order_by(ProductImage.position))).all()
         product_images = [product_image[0] for product_image in product_images]
     return templates.TemplateResponse(
-        request=request, name="item.jinja", context={"item": None, "name": name, "is_admin": is_admin, "product": product, "product_images": product_images}
+        request=request, name="item.jinja", context={"item": None, "name": name, "is_admin": is_admin, "product": product, "product_images": product_images, "time": int(time.time()) if product.draft else 0}
     )
 
 @app.get("/item/{product_id}/edit")
