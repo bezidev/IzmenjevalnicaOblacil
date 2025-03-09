@@ -42,10 +42,10 @@ def translate(text_identifier: str, lang: str) -> str:
         lang = "sl"
     tr = TRANSLATIONS.get(text_identifier)
     if tr is None:
-        return ""
+        return text_identifier
     if tr.get(lang) is None:
         if tr.get("sl") is None:
-            return ""
+            return text_identifier
         return tr.get("sl")
     return tr.get(lang)
 
@@ -486,7 +486,11 @@ async def upload_image(request: Request, product_id: str, file: UploadFile, desc
         uid = str(uuid.uuid4())
         contents = await file.read()
         img = Image.open(io.BytesIO(contents))
-        img.save(f"uploads/images/{uid}.png", optimize=True, quality=80)
+        img.save(f"uploads/images/{uid}-original.webp", optimize=True, quality=80)
+        img.thumbnail((1100, 1100))
+        img.save(f"uploads/images/{uid}.webp", optimize=True, quality=80)
+        img.thumbnail((500, 500))
+        img.save(f"uploads/images/{uid}-small.webp", optimize=True, quality=80)
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=product_id))).all()
         order = len(product_images)
         product_image = ProductImage(
@@ -504,6 +508,59 @@ async def upload_image(request: Request, product_id: str, file: UploadFile, desc
             product.default_image_id = uid
 
     return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+
+
+def rotate_image(image_id: str, rotate: int):
+    with Image.open(f"uploads/images/{image_id}.webp") as im:
+        im_rotated = im.rotate(rotate)
+        im_rotated.save(f"uploads/images/{image_id}.webp")
+
+@app.get("/image/{image_id}/rotate/right")
+async def rotate_image_right(request: Request, image_id: str):
+    # Prvo preverimo, da ima uporabnik veljaven session in je administrator
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+
+    # Zaženemo povezavo s podatkovno bazo
+    async with connection.begin() as session:
+        # Preverimo, da taka slika sploh obstaja, saj se zanašamo na to, da pridobimo product_id
+        pi = (await session.execute(select(ProductImage).filter_by(image_id=image_id))).one_or_none()
+        if pi is None:
+            # Taka slika ne obstaja v podatkovni bazi, preusmerimo uporabnika domov.
+            return RedirectResponse(app.url_path_for("home"))
+        pi = pi[0]
+
+        rotate_image(f"{image_id}-original", -90)
+        rotate_image(f"{image_id}", -90)
+        rotate_image(f"{image_id}-small", -90)
+
+    return RedirectResponse(app.url_path_for("product_edit", product_id=pi.product_id), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/image/{image_id}/rotate/left")
+async def rotate_image_left(request: Request, image_id: str):
+    # Prvo preverimo, da ima uporabnik veljaven session in je administrator
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+
+    # Zaženemo povezavo s podatkovno bazo
+    async with connection.begin() as session:
+        # Preverimo, da taka slika sploh obstaja, saj se zanašamo na to, da pridobimo product_id
+        pi = (await session.execute(select(ProductImage).filter_by(image_id=image_id))).one_or_none()
+        if pi is None:
+            # Taka slika ne obstaja v podatkovni bazi, preusmerimo uporabnika domov.
+            return RedirectResponse(app.url_path_for("home"))
+        pi = pi[0]
+
+        rotate_image(f"{image_id}-original", 90)
+        rotate_image(f"{image_id}", 90)
+        rotate_image(f"{image_id}-small", 90)
+
+    return RedirectResponse(app.url_path_for("product_edit", product_id=pi.product_id), status_code=status.HTTP_303_SEE_OTHER)
+
+
 
 @app.get("/image/{image_id}/delete")
 async def delete_image(request: Request, image_id: str):
@@ -551,6 +608,9 @@ async def delete_image(request: Request, image_id: str):
 
         try:
             # Poskusimo izbrisati sliko iz strežnika. Če nam ne uspe, ni problema, lahko nadaljujemo.
+            os.remove(f"uploads/images/{image_id}.webp")
+            os.remove(f"uploads/images/{image_id}-small.webp")
+            os.remove(f"uploads/images/{image_id}-original.webp")
             os.remove(f"uploads/images/{image_id}.png")
         except:
             pass

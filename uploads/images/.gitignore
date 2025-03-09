@@ -3,3 +3,4 @@
 
 # Razen .gitignore
 !.gitignore
+!migrate-images.sh

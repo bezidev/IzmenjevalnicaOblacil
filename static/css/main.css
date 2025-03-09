@@ -10,3 +10,14 @@
 .grid-element {
     min-height: 100px;
 }
+
+.row {
+  display: flex; /* equal height of the children */
+}
+
+.col {
+  flex: 1; /* additionally, equal width */
+
+  padding: 1em;
+  border: solid;
+}

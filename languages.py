@@ -423,7 +423,15 @@ TRANSLATIONS: dict[str, dict] = {
     "teacher": {
         "en": "Teacher",
         "sl": "Učitelj",
-    }
+    },
+    "rotate_image_right": {
+        "en": "Rotate the image by 90 degrees clockwise",
+        "sl": "Obrni sliko za 90 stopinj v desno",
+    },
+    "rotate_image_left": {
+        "en": "Rotate the image by 90 degrees counterclockwise",
+        "sl": "Obrni sliko za 90 stopinj v levo",
+    },
 }
 
 SUPPORTED_LANGUAGES = [

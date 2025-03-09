@@ -106,8 +106,8 @@
     <h3>{{ "product_images"|translate(lang) }}</h3>
     {% for image in images %}
         <article>
-            <div class="shared-width">
-                <div class="shared-height" style="width: 300px;">
+            <div class="shared-width row">
+                <div class="shared-height col" style="width: 300px;">
                     <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='up') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↑</button></a>
                     <div style="height: 5px;"></div>
                     <a href="{{ url_for('set_image_default', image_id=image.image_id) }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>{{ "set_default_picture"|translate(lang) }}</button></a>
@@ -115,9 +115,13 @@
                     <a href="{{ url_for('move_image_up_down', image_id=image.image_id, up_down='down') }}"><button style="width: 100%;" {% if product.default_image_id == image.image_id %}disabled{% endif %}>↓</button></a>
                     <div style="height: 5px;"></div>
                     <a href="{{ url_for('delete_image', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">{{ "delete_picture"|translate(lang) }}</button></a>
+                    <div style="height: 25px;"></div>
+                    <a href="{{ url_for('rotate_image_right', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">{{ "rotate_image_right"|translate(lang) }}</button></a>
+                    <div style="height: 5px;"></div>
+                    <a href="{{ url_for('rotate_image_left', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">{{ "rotate_image_left"|translate(lang) }}</button></a>
                 </div>
-                <div style="width: 5px;"></div>
-                <img src="/uploads/images/{{ image.image_id }}.png" alt="{{ image.description }}" style="height: 300px;">
+                <div class="col" style="width: 5px;"></div>
+                <img src="/uploads/images/{{ image.image_id }}.webp" alt="{{ image.description }}" style="height: 450px;">
             </div>
         </article>
     {% endfor %}
