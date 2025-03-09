@@ -512,7 +512,7 @@ async def upload_image(request: Request, product_id: str, file: UploadFile, desc
 
 def rotate_image(image_id: str, rotate: int):
     with Image.open(f"uploads/images/{image_id}.webp") as im:
-        im_rotated = im.rotate(rotate)
+        im_rotated = im.rotate(rotate, expand=1)
         im_rotated.save(f"uploads/images/{image_id}.webp")
 
 @app.get("/image/{image_id}/rotate/right")
