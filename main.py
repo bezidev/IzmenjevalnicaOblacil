@@ -351,7 +351,7 @@ async def product_edit(request: Request, product_id: str):
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=product_id).order_by(ProductImage.position))).all()
         product_images = [product_image[0] for product_image in product_images]
     return templates.TemplateResponse(
-        request=request, name="product_edit.jinja", context={"name": name, "is_admin": True, "product": product, "images": product_images}
+        request=request, name="product_edit.jinja", context={"name": name, "is_admin": True, "product": product, "images": product_images, "time": int(time.time())}
     )
 
 @app.get("/admin/new_product")

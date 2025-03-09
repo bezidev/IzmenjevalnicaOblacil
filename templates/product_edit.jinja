@@ -121,7 +121,7 @@
                     <a href="{{ url_for('rotate_image_left', image_id=image.image_id) }}"><button class="secondary" style="width: 100%;">{{ "rotate_image_left"|translate(lang) }}</button></a>
                 </div>
                 <div class="col" style="width: 5px;"></div>
-                <img src="/uploads/images/{{ image.image_id }}.webp" alt="{{ image.description }}" style="height: 450px;">
+                <img src="/uploads/images/{{ image.image_id }}.webp?t={{ time }}" alt="{{ image.description }}" style="height: 450px;">
             </div>
         </article>
     {% endfor %}
