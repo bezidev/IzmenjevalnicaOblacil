@@ -107,6 +107,14 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "Unknown condition",
         "sl": "Neznano stanje",
     },
+    "state_poor": {
+        "en": "Poor condition",
+        "sl": "Slabo stanje",
+    },
+    "state_medium": {
+        "en": "Medium condition",
+        "sl": "Srednje stanje",
+    },
     "state_good": {
         "en": "Good condition",
         "sl": "Dobro stanje",
@@ -122,6 +130,14 @@ TRANSLATIONS: dict[str, dict] = {
     "product_state_unknown": {
         "en": "Product is in an unknown condition",
         "sl": "Izdelek je v neznanem stanju",
+    },
+    "product_state_poor": {
+        "en": "Product is in a poor condition",
+        "sl": "Izdelek je v slabem stanju",
+    },
+    "product_state_medium": {
+        "en": "Product is in a medium condition",
+        "sl": "Izdelek je v srednjem stanju",
     },
     "product_state_good": {
         "en": "Product is in a good condition",
@@ -363,9 +379,21 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "🟪 Purple",
         "sl": "🟪 Vijolična",
     },
+    "beige": {
+        "en": "⚪ Beige",
+        "sl": "⚪ Bež",
+    },
     "white": {
         "en": "⬜ White",
         "sl": "⬜ Bela",
+    },
+    "brown": {
+        "en": "🟫 Brown",
+        "sl": "🟫 Rjava",
+    },
+    "grey": {
+        "en": "🩶 Grey",
+        "sl": "🩶 Siva",
     },
     "black": {
         "en": "⬛ Black",
@@ -411,6 +439,14 @@ TRANSLATIONS: dict[str, dict] = {
     "spandex": {
         "en": "Spandex",
         "sl": "Elastan",
+    },
+    "nylon": {
+        "en": "Nylon",
+        "sl": "Najlon",
+    },
+    "mixed_materials": {
+        "en": "Mixed materials",
+        "sl": "Mešani materiali",
     },
     "select_color": {
         "en": "Select a color",

@@ -88,7 +88,10 @@ COLORS = [
     "blue",
     "pink",
     "purple",
+    "beige",
     "white",
+    "brown",
+    "grey",
     "black",
 ]
 
@@ -103,4 +106,6 @@ MATERIALS = [
     "feathers", # Perje (npr. rac/gosi)
     "polyester", # Poliester
     "spandex", # Elastan
+    "nylon", # Najlon
+    "mixed_materials", # Mešano
 ]

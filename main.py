@@ -31,10 +31,12 @@ MICROSOFT_CLIENT_SECRET = os.environ["MICROSOFT_CLIENT_SECRET"]
 SCOPE = "https://graph.microsoft.com/User.Read https://graph.microsoft.com/User.ReadBasic.All"
 
 ALLOWED_PRODUCT_STATES = [
-    -1,
-    100,
-    200,
-    300,
+    -1, # Neznana
+    50, # Slaba
+    75, # Srednja
+    100, # Dobra
+    200, # Zelo dobra
+    300, # Odlična
 ]
 
 def translate(text_identifier: str, lang: str) -> str:

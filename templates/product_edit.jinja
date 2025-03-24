@@ -62,6 +62,12 @@
         </div>
         <select name="state" aria-label="{{ "product_state"|translate(lang) }}">
             <option value="-1" {% if product.state == -1 %}selected{% endif %}>{{ "product_state_unknown"|translate(lang) }}</option>
+            <option value="50" {% if product.state == 50 %}selected{% endif %}>
+                {{ "product_state_poor"|translate(lang) }}
+            </option>
+            <option value="75" {% if product.state == 75 %}selected{% endif %}>
+                {{ "product_state_medium"|translate(lang) }}
+            </option>
             <option value="100" {% if product.state == 100 %}selected{% endif %}>
                 {{ "product_state_good"|translate(lang) }}
             </option>
