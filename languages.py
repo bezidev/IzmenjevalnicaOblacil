@@ -448,6 +448,10 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "Mixed materials",
         "sl": "Mešani materiali",
     },
+    "artificial_materials": {
+        "en": "Other artificial materials",
+        "sl": "Drugi umetni materiali",
+    },
     "select_color": {
         "en": "Select a color",
         "sl": "Izberite barvo",
@@ -468,6 +472,18 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "Rotate the image by 90 degrees counterclockwise",
         "sl": "Obrni sliko za 90 stopinj v levo",
     },
+    "product_brand": {
+        "en": "Product brand (if applicable)",
+        "sl": "Znamka izdelka (če je kakšna znamka)",
+    },
+    "undraft": {
+        "en": "Convert from draft",
+        "sl": "Pretvori iz osnutka",
+    },
+    "convert_draft": {
+        "en": "Convert to draft",
+        "sl": "Pretvori v osnutek",
+    }
 }
 
 SUPPORTED_LANGUAGES = [

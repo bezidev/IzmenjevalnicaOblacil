@@ -9,6 +9,7 @@
     <h1>{{ "adding_new_product"|translate(lang) }}</h1>
     <form method="POST">
         <input type="text" name="name" placeholder="{{ "product_name"|translate(lang) }}" aria-label="{{ "product_name"|translate(lang) }}" required>
+        <input type="text" name="brand" placeholder="{{ "product_brand"|translate(lang) }}" aria-label="{{ "product_brand"|translate(lang) }}">
         <select name="category" aria-label="{{ "select_category"|translate(lang) }}" required>
             <option selected disabled value="">
                 {{ "select_category"|translate(lang) }}

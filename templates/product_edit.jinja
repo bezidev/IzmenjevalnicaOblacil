@@ -23,6 +23,7 @@
     <h3>{{ "general_product_details"|translate(lang) }}</h3>
     <form method="POST" action="{{ url_for('product_edit_post', product_id=product.product_id) }}">
         <input type="text" name="name" placeholder="{{ "product_name"|translate(lang) }}" aria-label="{{ "product_name"|translate(lang) }}" value="{{ product.name }}" required>
+        <input type="text" name="brand" placeholder="{{ "product_brand"|translate(lang) }}" aria-label="{{ "product_brand"|translate(lang) }}" value="{{ product.brand }}">
         <div class="shared-width">
             <select name="category" aria-label="{{ "select_category"|translate(lang) }}" required>
                 {% for category in CATEGORIES %}

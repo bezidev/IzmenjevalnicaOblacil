@@ -146,7 +146,7 @@
                     <h5>
                         {{ PRODUCT_CATEGORIES[product.category]["emoji"] }} {{ PRODUCT_CATEGORIES[product.category]["name_" + lang] }} {% if PRODUCT_CATEGORIES[product.category]["has_size"] and product.size != "" %}({{ "of_size"|translate(lang) }} {{ product.size }}){% endif %}
                     </h5>
-                    {% if product.color != "" %}{{ product.color|translate(lang) }}{% if product.material != "" %}, {% endif %}{% endif %}{% if product.material != "" %}<b>{{ product.material|translate(lang) }}</b>{% endif %}
+                    {% if product.color != "" %}{{ product.color|translate(lang) }}{% if product.material != "" or product.brand != "" %}, {% endif %}{% endif %}{% if product.brand != "" %}<b>{{ product.brand }}</b>{% if product.material != "" %}, {% endif %}{% endif %}{% if product.material != "" %}<b>{{ product.material|translate(lang) }}</b>{% endif %}
                     <p></p>
                     <div style="display: flex; flex-direction: row;">
                         <div style="border: solid 2px white; border-radius: 15px; min-width: 120px; width: 25%; height: 30px; display: flex; flex-direction: row;">
@@ -210,6 +210,11 @@
                                 <button style="width: 100%;" class="secondary">{{ "delete"|translate(lang) }}</button>
                             </a>
                         </div>
+                        {% if product.draft %}
+                            <a href="{{ url_for('draft_undraft_product', product_id=product.product_id) }}">
+                                <button style="width: 100%;">{{ "undraft"|translate(lang) }}</button>
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             {% endfor %}

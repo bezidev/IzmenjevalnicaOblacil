@@ -32,6 +32,7 @@ class Product(Base):
     size = Column(String(100))
     color = Column(String(25))
     material = Column(String(25))
+    brand = Column(String(100))
     default_image_id = Column(String(50))
     archived = Column(Boolean)
     teacher = Column(Boolean)

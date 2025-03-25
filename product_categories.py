@@ -108,4 +108,5 @@ MATERIALS = [
     "spandex", # Elastan
     "nylon", # Najlon
     "mixed_materials", # Mešano
+    "artificial_materials", # Drugi umetni materiali
 ]

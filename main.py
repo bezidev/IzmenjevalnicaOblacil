@@ -368,7 +368,7 @@ async def new_product(request: Request):
     )
 
 @app.post("/admin/new_product")
-async def new_product_post(request: Request, name: str = Form(""), description: str = Form(""), category: str = Form("")):
+async def new_product_post(request: Request, name: str = Form(""), brand: str = Form(""), description: str = Form(""), category: str = Form("")):
     user = get_session_user(request.cookies.get("session"))
     if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
@@ -382,6 +382,7 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
         product = Product(
             product_id=uid,
             name=name,
+            brand=brand,
             description=description,
             category=category,
             size="",
@@ -405,6 +406,7 @@ async def new_product_post(request: Request, name: str = Form(""), description: 
 async def product_edit_post(request: Request,
                             product_id: str,
                             name: str = Form(""),
+                            brand: str = Form(""),
                             description: str = Form(""),
                             category: str = Form(""),
                             size: str = Form(""),
@@ -429,6 +431,7 @@ async def product_edit_post(request: Request,
             return RedirectResponse(app.url_path_for("home"))
         pi = pi[0]
         pi.name = name
+        pi.brand = brand
         pi.description = description
         pi.category = category
         pi.size = size
@@ -478,6 +481,21 @@ async def archive_product(request: Request, product_id: str):
         product.last_edited_by = user.user.user_id
         product.last_edited_at = int(time.time())
     return RedirectResponse(app.url_path_for("item_details", item_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/item/{product_id}/draft")
+async def draft_undraft_product(request: Request, product_id: str):
+    user = get_session_user(request.cookies.get("session"))
+    if user is None or not user.user.is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+    async with connection.begin() as session:
+        product = (await session.execute(select(Product).filter_by(product_id=product_id))).one()
+        product = product[0]
+        product.draft = not product.draft
+        product.last_edited_by = user.user.user_id
+        product.last_edited_at = int(time.time())
+    return RedirectResponse(app.url_path_for("item_details", item_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+
 
 
 @app.post("/item/{product_id}/upload_image")
