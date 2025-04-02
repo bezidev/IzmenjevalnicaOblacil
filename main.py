@@ -904,8 +904,8 @@ async def set_image_default(request: Request, image_id: str):
 
 
 @app.get("/language")
-async def set_language(lang: str = "sl"):
-    redirect_response = RedirectResponse(app.url_path_for("home"))
+async def set_language(lang: str = "sl", referer: typing.Annotated[str | None, Header()] = None):
+    redirect_response = RedirectResponse(referer)
     if lang not in SUPPORTED_LANGUAGES:
         lang = "sl"
     redirect_response.set_cookie(key="lang", value=lang, httponly=True, secure=True)
