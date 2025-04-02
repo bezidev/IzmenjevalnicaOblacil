@@ -2,9 +2,9 @@ import base64
 import os
 import time
 
-from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, select
+from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, select, ForeignKey
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 DATABASE_CONNECTION = f"sqlite+aiosqlite:///database/database.sqlite3"
 
@@ -39,6 +39,7 @@ class Product(Base):
     limit_to_teachers = Column(Boolean)
     state = Column(Integer)
     draft = Column(Boolean)
+    reserved_by_id = Column(String(50))
 
     published_by = Column(String(50))
     published_at = Column(Integer)

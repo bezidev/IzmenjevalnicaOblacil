@@ -11,7 +11,7 @@ import os
 
 from PIL import Image
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Form, UploadFile
+from fastapi import FastAPI, Request, Form, UploadFile, Header
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -131,6 +131,7 @@ async def home(
         women_shoes: bool = False,
         accessories: bool = False,
         teacher: bool = False,
+        my_reservations: bool = False,
 ):
     user = get_session_user(request.cookies.get("session"))
     name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
@@ -180,6 +181,12 @@ async def home(
         products_filtered2 = []
         for product in products:
             if teacher and not product.teacher:
+                continue
+            if not is_admin and (product.reserved_by_id is not None and product.reserved_by_id != "" and product.reserved_by_id != (user.user.user_id if user is not None else "")):
+                continue
+            if my_reservations:
+                if product.reserved_by_id == (user.user.user_id if user is not None else ""):
+                    products_filtered.append(product)
                 continue
             if active and not product.archived and not product.draft:
                 products_filtered.append(product)
@@ -250,6 +257,7 @@ async def home(
                 "filter_women_shoes": women_shoes,
                 "filter_accessories": accessories,
                 "filter_teacher": teacher,
+                "filter_my_reservations": my_reservations,
             },
             "time": int(time.time()),
         }
@@ -273,6 +281,7 @@ async def home_post(
         women_shoes: bool = Form(False),
         accessories: bool = Form(False),
         teacher: bool = Form(False),
+        my_reservations: bool = Form(False),
 ):
     encode = {
         "sort": sorting_method,
@@ -307,6 +316,8 @@ async def home_post(
         encode["women_shoes"] = True
     if teacher:
         encode["teacher"] = True
+    if my_reservations:
+        encode["my_reservations"] = True
     return RedirectResponse(app.url_path_for("home") + f"?{urllib.parse.urlencode(encode)}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -330,14 +341,22 @@ async def item_details(request: Request, item_id: str):
         if product is None:
             return RedirectResponse(app.url_path_for("home"))
         product = product[0]
+        if product is None:
+            return RedirectResponse(app.url_path_for("home"))
         if product.limit_to_teachers and not (is_admin or is_teacher):
             return RedirectResponse(app.url_path_for("home"))
         if (product.draft or product.archived) and not is_admin:
             return RedirectResponse(app.url_path_for("home"))
         product_images = (await session.execute(select(ProductImage).filter_by(product_id=item_id).order_by(ProductImage.position))).all()
         product_images = [product_image[0] for product_image in product_images]
+
+        reserver = (await session.execute(select(User).filter_by(user_id=product.reserved_by_id))).one_or_none()
+        if reserver is not None:
+            reserver = reserver[0]
+        product.reserved_by = reserver
+        has_reserved = False if (user is None or reserver is None) else user.user.user_id == reserver.user_id
     return templates.TemplateResponse(
-        request=request, name="item.jinja", context={"item": None, "name": name, "is_admin": is_admin, "product": product, "product_images": product_images, "time": int(time.time()) if product.draft else 0}
+        request=request, name="item.jinja", context={"item": None, "name": name, "is_admin": is_admin, "product": product, "product_images": product_images, "time": int(time.time()) if product.draft else 0, "has_reserved": has_reserved}
     )
 
 @app.get("/item/{product_id}/edit")
@@ -470,7 +489,7 @@ async def delete_product(request: Request, product_id: str):
     return RedirectResponse(app.url_path_for("home"), status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/item/{product_id}/archive")
-async def archive_product(request: Request, product_id: str):
+async def archive_product(request: Request, product_id: str, referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
@@ -480,11 +499,33 @@ async def archive_product(request: Request, product_id: str):
         product.archived = not product.archived
         product.last_edited_by = user.user.user_id
         product.last_edited_at = int(time.time())
-    return RedirectResponse(app.url_path_for("item_details", item_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
+@app.get("/item/{product_id}/reserve")
+async def product_reserve(request: Request, product_id: str, referer: typing.Annotated[str | None, Header()] = None):
+    user = get_session_user(request.cookies.get("session"))
+    if user is None:
+        return RedirectResponse(app.url_path_for("item_details", item_id=product_id),
+                                status_code=status.HTTP_303_SEE_OTHER)
+    async with connection.begin() as session:
+        product = (await session.execute(select(Product).filter_by(product_id=product_id))).one_or_none()
+        if product is None:
+            return RedirectResponse(app.url_path_for("home"))
+        product = product[0]
+        if product.archived:
+            return RedirectResponse(app.url_path_for("item_details", item_id=product_id),
+                                    status_code=status.HTTP_303_SEE_OTHER)
+        if product.reserved_by_id == user.user.user_id:
+            product.reserved_by_id = None
+        elif not (product.reserved_by_id == "" or product.reserved_by_id is None):
+            return RedirectResponse(app.url_path_for("item_details", item_id=product_id),
+                                    status_code=status.HTTP_303_SEE_OTHER)
+        else:
+            product.reserved_by_id = user.user.user_id
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/item/{product_id}/draft")
-async def draft_undraft_product(request: Request, product_id: str):
+async def draft_undraft_product(request: Request, product_id: str, referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     if user is None or not user.user.is_admin:
         return RedirectResponse(app.url_path_for("home"))
@@ -494,7 +535,7 @@ async def draft_undraft_product(request: Request, product_id: str):
         product.draft = not product.draft
         product.last_edited_by = user.user.user_id
         product.last_edited_at = int(time.time())
-    return RedirectResponse(app.url_path_for("item_details", item_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 
 
@@ -584,7 +625,7 @@ async def rotate_image_left(request: Request, image_id: str):
 
 
 @app.get("/image/{image_id}/delete")
-async def delete_image(request: Request, image_id: str):
+async def delete_image(request: Request, image_id: str, referer: typing.Annotated[str | None, Header()] = None):
     # Prvo preverimo, da ima uporabnik veljaven session in je administrator
     user = get_session_user(request.cookies.get("session"))
     if user is None or not user.user.is_admin:
@@ -636,7 +677,7 @@ async def delete_image(request: Request, image_id: str):
         except:
             pass
 
-    return RedirectResponse(app.url_path_for("product_edit", product_id=product_id), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/admin/panel")
@@ -661,9 +702,19 @@ async def admin(request: Request, user_name: str = Form("")):
     async with connection.begin() as session:
         users = (await session.execute(select(User).order_by(User.surname))).all()
         users: List[User] = [user[0] for user in users]
+
+        reservations = (await session.execute(select(Product).filter(Product.reserved_by_id is not None and Product.reserved_by_id != "").filter_by(archived=False))).all()
+        reservations: List[Product] = [product[0] for product in reservations]
+        for user in users:
+            for i, v in enumerate(reservations):
+                if user.user_id != v.reserved_by_id:
+                    continue
+                reservations[i].reserved_by = user
+        reservations.sort(key=lambda e: e.reserved_by.surname)
     return templates.TemplateResponse(
         request=request, name="admin.jinja", context={
             "users": users,
+            "reservations": reservations,
             "search_results": search_results,
         }
     )
@@ -696,6 +747,21 @@ async def admin_user_delete_post(request: Request, user_id: str):
     async with connection.begin() as session:
         await session.execute(delete(User).filter_by(user_id=user_id))
     return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/admin/reservation/{product_id}/delete")
+async def admin_reservation_delete_post(request: Request, product_id: str):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+    async with connection.begin() as session:
+        reservation = (await session.execute(select(Product).filter_by(product_id=product_id))).one_or_none()
+        if reservation is None or reservation[0] is None:
+            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+        reservation = reservation[0]
+        reservation.reserved_by_id = None
+    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+
 
 
 @app.get("/admin/user/{user_id}/create")

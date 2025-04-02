@@ -8,3 +8,4 @@ aiosqlite
 pillow
 python-multipart
 aiofiles
+alembic

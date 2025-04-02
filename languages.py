@@ -483,6 +483,42 @@ TRANSLATIONS: dict[str, dict] = {
     "convert_draft": {
         "en": "Convert to draft",
         "sl": "Pretvori v osnutek",
+    },
+    "product_archive": {
+        "en": "Archive product",
+        "sl": "Arhiviraj izdelek",
+    },
+    "delete_reservation": {
+        "en": "Delete reservation",
+        "sl": "Izbriši rezervacijo",
+    },
+    "deleting_reservation_destructive_action": {
+        "en": "Deleting a reservation is a potentially destructive action. Do you wish to continue?",
+        "sl": "Izbris rezervacije je potencialno nevarna dejavnost. Ali res želite nadaljevati s tem dejanjem?",
+    },
+    "reservation_overview": {
+        "en": "Reservation overview",
+        "sl": "Pregled rezervacij",
+    },
+    "product_is_free_to_reserve": {
+        "en": "Product is free to reserve. Log in to continue with reservation.",
+        "sl": "Izdelek je na voljo za rezervacijo. Prijavite se, da nadaljujete z rezervacijo.",
+    },
+    "reserve": {
+        "en": "Reserve product",
+        "sl": "Rezervirajte izdelek",
+    },
+    "remove_reservation": {
+        "en": "Remove reservation",
+        "sl": "Prekliči rezervacijo",
+    },
+    "reserved_by": {
+        "en": "Reserved by",
+        "sl": "Rezerviral/a",
+    },
+    "show_only_my_reservations": {
+        "en": "Show only my reservations",
+        "sl": "Prikaži samo moje rezervacije",
     }
 }
 

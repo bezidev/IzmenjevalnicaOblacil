@@ -52,11 +52,7 @@
 <body>
 <main class="container">
     {% include 'navbar.jinja' %}
-    {% if login_success == True %}
-        <div style="border-radius: 20px; padding: 10px; background-color: green;">
-            <h3>{{ "login_successful"|translate(lang) }}</h3>
-        </div>
-    {% elif login_success == False %}
+    {% if login_success == False %}
         <div style="border-radius: 20px; padding: 10px; background-color: #ED4337;">
             <h3>{{ "error_signing_in"|translate(lang) }}</h3>
             {{ "please_try_again"|translate(lang) }}
@@ -115,6 +111,14 @@
                                 <label>
                                     <input name="teacher" type="checkbox" role="switch" {% if filters["filter_teacher"] %}checked{% endif %} />
                                     {{ "show_only_teacher_products"|translate(lang) }}
+                                </label>
+                            </fieldset>
+                        {% endif %}
+                        {% if name != None %}
+                            <fieldset>
+                                <label>
+                                    <input name="my_reservations" type="checkbox" role="switch" {% if filters["filter_my_reservations"] %}checked{% endif %} />
+                                    {{ "show_only_my_reservations"|translate(lang) }}
                                 </label>
                             </fieldset>
                         {% endif %}

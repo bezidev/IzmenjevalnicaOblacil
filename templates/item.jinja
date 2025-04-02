@@ -252,6 +252,21 @@
                     <a href="{{ url_for('delete_product', product_id=product.product_id) }}"><button class="secondary">
                         {{ "delete"|translate(lang) }}</button></a>
                 {% endif %}
+                <p></p>
+                <hr>
+                {% if name != None and (product.reserved_by_id == "" or product.reserved_by_id == None) %}
+                    <a href="{{ url_for('product_reserve', product_id=product.product_id) }}"><button>{{ "reserve"|translate(lang) }}</button></a>
+                {% endif %}
+                {% if has_reserved %}
+                    <a href="{{ url_for('product_reserve', product_id=product.product_id) }}"><button>{{ "remove_reservation"|translate(lang) }}</button></a>
+                {% endif %}
+                {% if name == None and (product.reserved_by_id == "" or product.reserved_by_id == None) %}
+                    {{ "product_is_free_to_reserve"|translate(lang) }}
+                {% endif %}
+                {% if is_admin and not (product.reserved_by_id == "" or product.reserved_by_id == None) %}
+                    <p></p>
+                    {{ "reserved_by"|translate(lang) }}: {{ product.reserved_by.first_name }} {{ product.reserved_by.surname }} (<a href="mailto:{{ product.reserved_by.email }}">{{ product.reserved_by.email }}</a>)
+                {% endif %}
             </div>
         </div>
     </div>
