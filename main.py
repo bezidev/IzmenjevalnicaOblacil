@@ -123,6 +123,8 @@ async def home(
         sunglasses: bool = False,
         men_shirts: bool = False,
         women_shirts: bool = False,
+        men_jacket: bool = False,
+        women_jacket: bool = False,
         men_pants: bool = False,
         women_pants: bool = False,
         women_dress: bool = False,
@@ -148,6 +150,8 @@ async def home(
             not sunglasses and
             not men_shirts and
             not women_shirts and
+            not men_jacket and
+            not women_jacket and
             not men_pants and
             not women_pants and
             not women_skirts and
@@ -159,6 +163,8 @@ async def home(
         sunglasses = True
         men_shirts = True
         women_shirts = True
+        men_jacket = True
+        women_jacket = True
         men_pants = True
         women_pants = True
         women_skirts = True
@@ -202,6 +208,10 @@ async def home(
             elif men_shirts and product.category == "men-shirts":
                 products_filtered2.append(product)
             elif women_shirts and product.category == "women-shirts":
+                products_filtered2.append(product)
+            elif men_jacket and product.category == "men-jacket":
+                products_filtered2.append(product)
+            elif women_jacket and product.category == "women-jacket":
                 products_filtered2.append(product)
             elif men_pants and product.category == "men-pants":
                 products_filtered2.append(product)
@@ -249,6 +259,8 @@ async def home(
                 "filter_sunglasses": sunglasses,
                 "filter_men_shirts": men_shirts,
                 "filter_women_shirts": women_shirts,
+                "filter_men_jacket": men_jacket,
+                "filter_women_jacket": women_jacket,
                 "filter_men_pants": men_pants,
                 "filter_women_pants": women_pants,
                 "filter_women_skirts": women_skirts,
@@ -273,6 +285,8 @@ async def home_post(
         sunglasses: bool = Form(False),
         men_shirts: bool = Form(False),
         women_shirts: bool = Form(False),
+        men_jacket: bool = Form(False),
+        women_jacket: bool = Form(False),
         men_pants: bool = Form(False),
         women_pants: bool = Form(False),
         women_skirts: bool = Form(False),
@@ -283,7 +297,7 @@ async def home_post(
         teacher: bool = Form(False),
         my_reservations: bool = Form(False),
 ):
-    encode = {
+    encode: dict[str, str | bool] = {
         "sort": sorting_method,
     }
     if active:
@@ -302,6 +316,10 @@ async def home_post(
         encode["men_shirts"] = True
     if women_shirts:
         encode["women_shirts"] = True
+    if men_jacket:
+        encode["men_jacket"] = True
+    if women_jacket:
+        encode["women_jacket"] = True
     if men_pants:
         encode["men_pants"] = True
     if women_pants:
