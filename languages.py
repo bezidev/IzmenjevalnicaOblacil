@@ -519,7 +519,79 @@ TRANSLATIONS: dict[str, dict] = {
     "show_only_my_reservations": {
         "en": "Show only my reservations",
         "sl": "Prikaži samo moje rezervacije",
-    }
+    },
+    "you_have": {
+        "en": "You have",
+        "sl": "Imate",
+    },
+    "credit_singular": {
+        "en": "credit",
+        "sl": "kredit",
+    },
+    "credit_dual": {
+        "en": "credits",
+        "sl": "kredita",
+    },
+    "credit_three_four": {
+        "en": "credits",
+        "sl": "kredite",
+    },
+    "credit_plural": {
+        "en": "credits",
+        "sl": "kreditov",
+    },
+    "and": {
+        "en": "and",
+        "sl": "in",
+    },
+    "reservation_singular": {
+        "en": "reservation",
+        "sl": "rezervacijo",
+    },
+    "reservation_dual": {
+        "en": "reservations",
+        "sl": "rezervaciji",
+    },
+    "reservation_three_four": {
+        "en": "reservations",
+        "sl": "rezervacije",
+    },
+    "reservation_plural": {
+        "en": "reservations",
+        "sl": "rezervacij",
+    },
+    "below_are_displayed_singular": {
+        "en": "Below is displayed",
+        "sl": "Spodaj je prikazan",
+    },
+    "below_are_displayed_dual": {
+        "en": "Below are displayed",
+        "sl": "Spodaj sta prikazana",
+    },
+    "below_are_displayed_three_four": {
+        "en": "Below are displayed",
+        "sl": "Spodaj so prikazani",
+    },
+    "below_are_displayed_plural": {
+        "en": "Below are displayed",
+        "sl": "Spodaj je prikazanih",
+    },
+    "product_singular": {
+        "en": "product",
+        "sl": "izdelek",
+    },
+    "product_dual": {
+        "en": "products",
+        "sl": "izdelka",
+    },
+    "product_three_four": {
+        "en": "products",
+        "sl": "izdelki",
+    },
+    "product_plural": {
+        "en": "products",
+        "sl": "izdelkov",
+    },
 }
 
 SUPPORTED_LANGUAGES = [

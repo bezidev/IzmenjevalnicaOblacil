@@ -151,6 +151,7 @@ async def home(
         my_reservations: bool = False,
 ):
     user = get_session_user(request.cookies.get("session"))
+    credits = user.user.credits if user is not None else 0
     name = f"{user.user.first_name} {user.user.surname}" if user is not None else None
     is_admin = False if user is None else user.user.is_admin
     is_teacher = False if user is None else user.user.is_teacher
@@ -194,6 +195,7 @@ async def home(
         women_shoes = True
         accessories = True
 
+    reserved_products = 0
     async with connection.begin() as session:
         if is_admin:
             products = (await session.execute(select(Product).filter_by())).all()
@@ -214,6 +216,7 @@ async def home(
             if my_reservations:
                 if product.reserved_by_id == (user.user.user_id if user is not None else ""):
                     products_filtered.append(product)
+                    reserved_products += 1
                 continue
             if active and not product.archived and not product.draft:
                 products_filtered.append(product)
@@ -278,6 +281,8 @@ async def home(
             "is_teacher": is_teacher,
             "products": products_filtered2,
             "sorting_method": sort,
+            "credits": credits,
+            "reserved_products": reserved_products,
             "filters": {
                 "filter_active": active,
                 "filter_archived": archived,

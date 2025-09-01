@@ -138,7 +138,12 @@
             </form>
         </div>
     </div>
+    {% if name != None %}
+        {{ "you_have"|translate(lang) }} <b>{{ credits }} {{ "credit"|translate_number(credits, lang) }}</b> {{ "and"|translate(lang) }} <b>{{ reserved_products }} {{ "reservation"|translate_number(reserved_products, lang) }}</b>.
+    {% endif %}
     {% if products|length > 0 %}
+        {{ "below_are_displayed"|translate_number(products|length, lang) }} <b>{{ products|length }} {{ "product"|translate_number(products|length, lang) }}</b>.
+        <p></p>
         <div class="grid-container">
             {% for product in products %}
                 <div class="grid-element">
