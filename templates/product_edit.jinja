@@ -32,7 +32,7 @@
             </select>
             {% if PRODUCT_CATEGORIES[product.category]["has_size"] and (product.category == "men-shoes" or product.category == "women-shoes") %}
                 <div style="width: 5px;"></div>
-                <input type="number" name="size" placeholder="{{ "write_size"|translate(lang) }}" aria-label="{{ "write_size"|translate(lang) }}">
+                <input type="number" name="size" placeholder="{{ "write_size"|translate(lang) }}" aria-label="{{ "write_size"|translate(lang) }}" value="{{ product.size }}">
             {% elif PRODUCT_CATEGORIES[product.category]["has_size"] %}
                 <div style="width: 5px;"></div>
                 <select name="size" aria-label="{{ "select_size"|translate(lang) }}">
