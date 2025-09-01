@@ -469,7 +469,7 @@ async def new_product_post(request: Request, name: str = Form(""), brand: str = 
             size="",
             default_image_id="",
             archived=False,
-            draft=True,
+            draft=False,
             teacher=False,
             limit_to_teachers=False,
             state=-1,
