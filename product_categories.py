@@ -13,6 +13,27 @@ PRODUCT_CATEGORIES = {
         "emoji": "🕶️",
         "has_size": False,
     },
+    "men-sweater": {
+        "html_uid": "men_sweater",
+        "name_sl": "Moški pulover",
+        "name_en": "Men's sweater",
+        "emoji": "🧥",
+        "has_size": True,
+    },
+    "women-sweater": {
+        "html_uid": "women_sweater",
+        "name_sl": "Ženski pulover",
+        "name_en": "Women's sweater",
+        "emoji": "🧥",
+        "has_size": True,
+    },
+    "unisex-sweater": {
+        "html_uid": "unisex_sweater",
+        "name_sl": "Unisex pulover",
+        "name_en": "Unisex sweater",
+        "emoji": "🧥",
+        "has_size": True,
+    },
     "men-shirts": {
         "html_uid": "men_shirts",
         "name_sl": "Moške majice",

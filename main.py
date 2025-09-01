@@ -51,6 +51,17 @@ def translate(text_identifier: str, lang: str) -> str:
         return tr.get("sl")
     return tr.get(lang)
 
+def translate_number(text_identifier: str, number: int, lang: str) -> str:
+    if number == 1:
+        text_identifier += "_singular"
+    elif number == 2:
+        text_identifier += "_dual"
+    elif number == 3 or number == 4:
+        text_identifier += "_three_four"
+    else:
+        text_identifier += "_plural"
+    return translate(text_identifier, lang)
+
 def app_context(request: Request) -> typing.Dict[str, typing.Any]:
     lang = request.cookies.get("lang")
     if lang is None or lang == "" or lang not in SUPPORTED_LANGUAGES:
@@ -84,6 +95,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="static")
 templates = Jinja2Templates(directory="templates", context_processors=[app_context])
 templates.env.filters["translate"] = translate
+templates.env.filters["translate_number"] = translate_number
 
 def sort_by_creation_date(e: Product):
     return e.published_at
@@ -121,6 +133,9 @@ async def home(
         draft: bool = False,
         hat: bool = False,
         sunglasses: bool = False,
+        men_sweater: bool = False,
+        women_sweater: bool = False,
+        unisex_sweater: bool = False,
         men_shirts: bool = False,
         women_shirts: bool = False,
         men_jacket: bool = False,
@@ -148,6 +163,9 @@ async def home(
     if (
             not hat and
             not sunglasses and
+            not men_sweater and
+            not women_sweater and
+            not unisex_sweater and
             not men_shirts and
             not women_shirts and
             not men_jacket and
@@ -161,6 +179,9 @@ async def home(
             not accessories):
         hat = True
         sunglasses = True
+        men_sweater = True
+        women_sweater = True
+        unisex_sweater = True
         men_shirts = True
         women_shirts = True
         men_jacket = True
@@ -204,6 +225,12 @@ async def home(
             if hat and product.category == "hat":
                 products_filtered2.append(product)
             elif sunglasses and product.category == "sunglasses":
+                products_filtered2.append(product)
+            elif men_sweater and product.category == "men-sweater":
+                products_filtered2.append(product)
+            elif women_sweater and product.category == "women-sweater":
+                products_filtered2.append(product)
+            elif unisex_sweater and product.category == "unisex-sweater":
                 products_filtered2.append(product)
             elif men_shirts and product.category == "men-shirts":
                 products_filtered2.append(product)
@@ -257,6 +284,9 @@ async def home(
                 "filter_draft": draft,
                 "filter_hat": hat,
                 "filter_sunglasses": sunglasses,
+                "filter_men_sweater": men_sweater,
+                "filter_women_sweater": women_sweater,
+                "filter_unisex_sweater": unisex_sweater,
                 "filter_men_shirts": men_shirts,
                 "filter_women_shirts": women_shirts,
                 "filter_men_jacket": men_jacket,
@@ -283,6 +313,9 @@ async def home_post(
         draft: bool = Form(False),
         hat: bool = Form(False),
         sunglasses: bool = Form(False),
+        men_sweater: bool = Form(False),
+        women_sweater: bool = Form(False),
+        unisex_sweater: bool = Form(False),
         men_shirts: bool = Form(False),
         women_shirts: bool = Form(False),
         men_jacket: bool = Form(False),
@@ -312,6 +345,12 @@ async def home_post(
         encode["hat"] = True
     if sunglasses:
         encode["sunglasses"] = True
+    if men_sweater:
+        encode["men_sweater"] = True
+    if women_sweater:
+        encode["women_sweater"] = True
+    if unisex_sweater:
+        encode["unisex_sweater"] = True
     if men_shirts:
         encode["men_shirts"] = True
     if women_shirts:
