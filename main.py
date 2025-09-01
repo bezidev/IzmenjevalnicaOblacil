@@ -213,6 +213,8 @@ async def home(
         products_filtered = []
         products_filtered2 = []
         for product in products:
+            if product.reserved_by_id == (user.user.user_id if user is not None else ""):
+                reserved_products += 1
             if teacher and not product.teacher:
                 continue
             if not is_admin and (product.reserved_by_id is not None and product.reserved_by_id != "" and product.reserved_by_id != (user.user.user_id if user is not None else "")):
@@ -220,7 +222,6 @@ async def home(
             if my_reservations:
                 if product.reserved_by_id == (user.user.user_id if user is not None else ""):
                     products_filtered.append(product)
-                    reserved_products += 1
                 continue
             if active and not product.archived and not product.draft:
                 products_filtered.append(product)
