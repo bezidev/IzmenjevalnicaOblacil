@@ -592,6 +592,10 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "products",
         "sl": "izdelkov",
     },
+    "reservation_date": {
+        "en": "Reservation date",
+        "sl": "Datum rezervacije",
+    }
 }
 
 SUPPORTED_LANGUAGES = [

@@ -40,6 +40,7 @@ class Product(Base):
     state = Column(Integer)
     draft = Column(Boolean)
     reserved_by_id = Column(String(50))
+    reserved_date = Column(Integer)
 
     published_by = Column(String(50))
     published_at = Column(Integer)

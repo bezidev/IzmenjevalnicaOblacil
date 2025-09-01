@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN reserved_date INTEGER DEFAULT 0;

@@ -62,6 +62,9 @@ def translate_number(text_identifier: str, number: int, lang: str) -> str:
         text_identifier += "_plural"
     return translate(text_identifier, lang)
 
+def timectime(s):
+    return time.ctime(s) # datetime.datetime.fromtimestamp(s)
+
 def app_context(request: Request) -> typing.Dict[str, typing.Any]:
     lang = request.cookies.get("lang")
     if lang is None or lang == "" or lang not in SUPPORTED_LANGUAGES:
@@ -96,6 +99,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="static")
 templates = Jinja2Templates(directory="templates", context_processors=[app_context])
 templates.env.filters["translate"] = translate
 templates.env.filters["translate_number"] = translate_number
+templates.env.filters["ctime"] = timectime
 
 def sort_by_creation_date(e: Product):
     return e.published_at
@@ -475,6 +479,8 @@ async def new_product_post(request: Request, name: str = Form(""), brand: str = 
             state=-1,
             color="",
             material="",
+            reserved_by_id="",
+            reserved_date=0,
             published_by=user.user.user_id,
             published_at=t,
             last_edited_by=user.user.user_id,
@@ -579,11 +585,13 @@ async def product_reserve(request: Request, product_id: str, referer: typing.Ann
                                     status_code=status.HTTP_303_SEE_OTHER)
         if product.reserved_by_id == user.user.user_id:
             product.reserved_by_id = None
+            product.reserved_date = time.time()
         elif not (product.reserved_by_id == "" or product.reserved_by_id is None):
             return RedirectResponse(app.url_path_for("item_details", item_id=product_id),
                                     status_code=status.HTTP_303_SEE_OTHER)
         else:
             product.reserved_by_id = user.user.user_id
+            product.reserved_date = time.time()
     return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/item/{product_id}/draft")

@@ -15,6 +15,7 @@
             <th scope="col">{{ "surname"|translate(lang) }}</th>
             <th scope="col">{{ "email"|translate(lang) }}</th>
             <th scope="col">{{ "product_name"|translate(lang) }}</th>
+            <th scope="col">{{ "reservation_date"|translate(lang) }}</th>
             <th scope="col">{{ "credits"|translate(lang) }}</th>
             <th scope="col">{{ "is_teacher"|translate(lang) }}</th>
             <th scope="col">{{ "save"|translate(lang) }}</th>
@@ -29,11 +30,12 @@
                 <th scope="col">{{ reservation.reserved_by.surname }}</th>
                 <th scope="col"><a href="mailto:{{ reservation.reserved_by.email }}">{{ reservation.reserved_by.email }}</a></th>
                 <th scope="col"><a href="{{ url_for('item_details', item_id=reservation.product_id) }}">{{ reservation.name }}</a></th>
+                <th scope="col">{{ reservation.reserved_date | ctime }}</th>
                 <form action="{{ url_for('admin_user_manage_post', user_id=reservation.reserved_by.user_id) }}" method="post">
                     <th scope="col">
                         <input type="number" name="credits" placeholder="{{ "credits"|translate(lang) }}"
                                aria-label="{{ "credits"|translate(lang) }}" value="{{ reservation.reserved_by.credits }}"
-                               style="margin-bottom: 0 !important;">
+                               style="margin-bottom: 0 !important; min-width: 100px;">
                     </th>
                     <th scope="col">
                         <input type="checkbox" id="teacher" name="teacher" {% if reservation.reserved_by.is_teacher %}checked{% endif %}/>
