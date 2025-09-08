@@ -129,7 +129,7 @@ async def send_mail():
 
 MAIL_SEND_DELAY = 60 * 60 * 24
 async def send_mails_coroutine():
-    t = datetime.datetime.now().replace(hour=15, minute=30, second=0)
+    t = datetime.datetime.now().replace(hour=14, minute=0, second=0)
     if datetime.datetime.now() > t:
         t += timedelta(days=1)
     delta = int(t.timestamp()) - int(time.time())
