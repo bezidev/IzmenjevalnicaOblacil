@@ -115,6 +115,7 @@ async def send_mail():
             reserver = (await session.execute(select(User).filter_by(user_id=product.reserved_by_id))).one_or_none()
             reserver: User = reserver[0]
             reservation += f'<b>{html.escape(reserver.first_name)} {html.escape(reserver.surname)}</b>: <a href="https://izmenjevalnica.gimb.org/item/{product.product_id}">{html.escape(product.name)}</a><br>'
+    reservation += '<p></p>Da pogledate vse rezervacije, se prijavite v portal in dostopajte do <a href="https://izmenjevalnica.gimb.org/admin/panel">administratorske plošče</a>.<br>'
     reservation += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste označeni za pomembno osebo v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
     message = MIMEMultipart("alternative")
     message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
@@ -123,12 +124,12 @@ async def send_mail():
     message.attach(MIMEText(reservation, "html"))
     with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_USERNAME, ", ".join(SEND_MAILS_PEOPLE), message.as_string())
+        server.sendmail(EMAIL_USERNAME, SEND_MAILS_PEOPLE, message.as_string())
 
 
 MAIL_SEND_DELAY = 60 * 60 * 24
 async def send_mails_coroutine():
-    t = datetime.datetime.now().replace(hour=14, minute=0, second=0)
+    t = datetime.datetime.now().replace(hour=15, minute=30, second=0)
     if datetime.datetime.now() > t:
         t += timedelta(days=1)
     delta = int(t.timestamp()) - int(time.time())
