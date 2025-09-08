@@ -1,9 +1,17 @@
+import asyncio
+import datetime
+import html
 import io
+import smtplib
+import ssl
 import time
 import typing
 import urllib.parse
 import uuid
 from contextlib import asynccontextmanager
+from datetime import timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List
 
 import httpx
@@ -29,6 +37,15 @@ load_dotenv()
 MICROSOFT_CLIENT_ID = os.environ["MICROSOFT_CLIENT_ID"]
 MICROSOFT_CLIENT_SECRET = os.environ["MICROSOFT_CLIENT_SECRET"]
 SCOPE = "https://graph.microsoft.com/User.Read https://graph.microsoft.com/User.ReadBasic.All"
+
+SEND_MAILS_PEOPLE = os.environ["SEND_MAILS_PEOPLE"].split(",")
+
+EMAIL_SERVER = os.environ["EMAIL_SERVER"]
+EMAIL_USERNAME = os.environ["EMAIL_USERNAME"]
+EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
+
+# Create a secure SSL context
+context = ssl.create_default_context()
 
 ALLOWED_PRODUCT_STATES = [
     -1, # Neznana
@@ -84,12 +101,51 @@ def app_context(request: Request) -> typing.Dict[str, typing.Any]:
         "is_teacher": is_teacher,
     }
 
+async def send_mail():
+    dt = datetime.datetime.now()
+    dt -= timedelta(days=1)
+    start = int(dt.timestamp())
+    async with connection.begin() as session:
+        products = (await session.execute(select(Product).filter(Product.reserved_by_id != None, Product.reserved_date > start, Product.reserved_date < int(time.time())))).all()
+        if len(products) == 0:
+            return
+        reservation = "Pozdravljeni!<p></p>Na izmenjevalnici oblačil so se pojavile naslednje nove rezervacije:<br>"
+        for product in products:
+            product = product[0]
+            reserver = (await session.execute(select(User).filter_by(user_id=product.reserved_by_id))).one_or_none()
+            reserver: User = reserver[0]
+            reservation += f'<b>{html.escape(reserver.first_name)} {html.escape(reserver.surname)}</b>: <a href="https://izmenjevalnica.gimb.org/item/{product.product_id}">{html.escape(product.name)}</a><br>'
+    reservation += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste označeni za pomembno osebo v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
+    message = MIMEMultipart("alternative")
+    message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
+    message["From"] = EMAIL_USERNAME
+    message["To"] = ", ".join(SEND_MAILS_PEOPLE)
+    message.attach(MIMEText(reservation, "html"))
+    with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
+        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_USERNAME, ", ".join(SEND_MAILS_PEOPLE), message.as_string())
+
+
+MAIL_SEND_DELAY = 60 * 60 * 24
+async def send_mails_coroutine():
+    t = datetime.datetime.now().replace(hour=14, minute=0, second=0)
+    if datetime.datetime.now() > t:
+        t += timedelta(days=1)
+    delta = int(t.timestamp()) - int(time.time())
+    print(f"Sleeping for {delta} seconds before sending")
+    await asyncio.sleep(delta)
+    while True:
+        await send_mail()
+        await asyncio.sleep(MAIL_SEND_DELAY)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Executed on startup
     async with engine.begin() as conn:
         print("Creating database!")
         await conn.run_sync(Base.metadata.create_all)
+    asyncio.create_task(send_mails_coroutine())
     yield
     # Executed after end
 
