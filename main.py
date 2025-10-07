@@ -648,12 +648,14 @@ async def product_reserve(request: Request, product_id: str, referer: typing.Ann
                                     status_code=status.HTTP_303_SEE_OTHER)
         if product.reserved_by_id == user.user.user_id:
             product.reserved_by_id = None
+            product.reservation_mail_sent = False
             product.reserved_date = time.time()
         elif not (product.reserved_by_id == "" or product.reserved_by_id is None):
             return RedirectResponse(app.url_path_for("item_details", item_id=product_id),
                                     status_code=status.HTTP_303_SEE_OTHER)
         else:
             product.reserved_by_id = user.user.user_id
+            product.reservation_mail_sent = False
             product.reserved_date = time.time()
     return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
