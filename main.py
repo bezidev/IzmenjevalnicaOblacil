@@ -102,11 +102,8 @@ def app_context(request: Request) -> typing.Dict[str, typing.Any]:
     }
 
 async def send_mail():
-    dt = datetime.datetime.now()
-    dt -= timedelta(days=1)
-    start = int(dt.timestamp())
     async with connection.begin() as session:
-        products = (await session.execute(select(Product).filter(Product.reserved_by_id != None, Product.reserved_date > start, Product.reserved_date < int(time.time())))).all()
+        products = (await session.execute(select(Product).filter_by(reservation_mail_sent=False))).all()
         if len(products) == 0:
             return
         reservation = "Pozdravljeni!<p></p>Na izmenjevalnici oblačil so se pojavile naslednje nove rezervacije:<br>"
@@ -115,16 +112,19 @@ async def send_mail():
             reserver = (await session.execute(select(User).filter_by(user_id=product.reserved_by_id))).one_or_none()
             reserver: User = reserver[0]
             reservation += f'<b>{html.escape(reserver.first_name)} {html.escape(reserver.surname)}</b>: <a href="https://izmenjevalnica.gimb.org/item/{product.product_id}">{html.escape(product.name)}</a><br>'
-    reservation += '<p></p>Da pogledate vse rezervacije, se prijavite v portal in dostopajte do <a href="https://izmenjevalnica.gimb.org/admin/panel">administratorske plošče</a>.<br>'
-    reservation += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste označeni za pomembno osebo v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
-    message["From"] = EMAIL_USERNAME
-    message["To"] = ", ".join(SEND_MAILS_PEOPLE)
-    message.attach(MIMEText(reservation, "html"))
-    with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
-        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_USERNAME, SEND_MAILS_PEOPLE, message.as_string())
+        reservation += '<p></p>Da pogledate vse rezervacije, se prijavite v portal in dostopajte do <a href="https://izmenjevalnica.gimb.org/admin/panel">administratorske plošče</a>.<br>'
+        reservation += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste označeni za pomembno osebo v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
+        message["From"] = EMAIL_USERNAME
+        message["To"] = ", ".join(SEND_MAILS_PEOPLE)
+        message.attach(MIMEText(reservation, "html"))
+        with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
+            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_USERNAME, SEND_MAILS_PEOPLE, message.as_string())
+        for product in products:
+            product = product[0]
+            product.reservation_mail_sent = True
 
 
 MAIL_SEND_DELAY = 60 * 60 * 24
@@ -136,7 +136,12 @@ async def send_mails_coroutine():
     print(f"Sleeping for {delta} seconds before sending")
     await asyncio.sleep(delta)
     while True:
-        await send_mail()
+        print(f"Sending mail")
+        try:
+            await send_mail()
+            print(f"Sending done")
+        except Exception as e:
+            print(f"Failure sending e-mails: {e}")
         await asyncio.sleep(MAIL_SEND_DELAY)
 
 
