@@ -103,7 +103,7 @@ def app_context(request: Request) -> typing.Dict[str, typing.Any]:
 
 async def send_mail():
     async with connection.begin() as session:
-        products = (await session.execute(select(Product).filter_by(reservation_mail_sent=False))).all()
+        products = (await session.execute(select(Product).filter(Product.reserved_by_id != None, Product.reserved_by_id != "", Product.reservation_mail_sent == False))).all()
         if len(products) == 0:
             return
         reservation = "Pozdravljeni!<p></p>Na izmenjevalnici oblačil so se pojavile naslednje nove rezervacije:<br>"
