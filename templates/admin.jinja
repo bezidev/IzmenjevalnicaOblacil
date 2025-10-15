@@ -118,7 +118,7 @@
                     <th scope="col">
                         <input type="number" name="credits" placeholder="{{ "credits"|translate(lang) }}"
                                aria-label="{{ "credits"|translate(lang) }}" value="{{ user.credits }}"
-                               style="margin-bottom: 0 !important;">
+                               style="margin-bottom: 0 !important; min-width: 100px;">
                     </th>
                     <th scope="col">
                         <input type="checkbox" id="admin" name="admin" {% if user.is_admin %}checked{% endif %}/>
