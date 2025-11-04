@@ -871,7 +871,7 @@ async def admin_users(request: Request, user_name: str = Form("")):
     )
 
 @app.post("/admin/user/{user_id}/manage")
-async def admin_user_manage_post(request: Request, user_id: str, credits: int = Form(0), admin: bool = Form(False), teacher: bool = Form(False)):
+async def admin_user_manage_post(request: Request, user_id: str, credits: int = Form(0), admin: bool = Form(False), teacher: bool = Form(False), referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     is_admin = False if user is None else user.user.is_admin
     if not is_admin:
@@ -880,26 +880,26 @@ async def admin_user_manage_post(request: Request, user_id: str, credits: int = 
     async with connection.begin() as session:
         user = (await session.execute(select(User).filter_by(user_id=user_id))).one_or_none()
         if user is None:
-            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
         user = user[0]
         user.credits = credits
         user.is_admin = admin
         user.is_teacher = teacher
-    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.post("/admin/user/{user_id}/delete")
-async def admin_user_delete_post(request: Request, user_id: str):
+async def admin_user_delete_post(request: Request, user_id: str, referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     is_admin = False if user is None else user.user.is_admin
     if not is_admin:
         return RedirectResponse(app.url_path_for("home"))
     async with connection.begin() as session:
         await session.execute(delete(User).filter_by(user_id=user_id))
-    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/admin/reservation/{product_id}/delete")
-async def admin_reservation_delete_post(request: Request, product_id: str):
+async def admin_reservation_delete_post(request: Request, product_id: str, referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     is_admin = False if user is None else user.user.is_admin
     if not is_admin:
@@ -907,15 +907,15 @@ async def admin_reservation_delete_post(request: Request, product_id: str):
     async with connection.begin() as session:
         reservation = (await session.execute(select(Product).filter_by(product_id=product_id))).one_or_none()
         if reservation is None or reservation[0] is None:
-            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
         reservation = reservation[0]
         reservation.reserved_by_id = None
-    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 
 
 @app.get("/admin/user/{user_id}/create")
-async def admin_user_account_create(request: Request, user_id: str):
+async def admin_user_account_create(request: Request, user_id: str, referer: typing.Annotated[str | None, Header()] = None):
     user = get_session_user(request.cookies.get("session"))
     is_admin = False if user is None else user.user.is_admin
     if not is_admin:
@@ -925,7 +925,7 @@ async def admin_user_account_create(request: Request, user_id: str):
         client.headers = {"Authorization": f"Bearer {user.microsoft_token}"}
         user_response = await client.get(f"https://graph.microsoft.com/v1.0/users/{user_id}")
         if user_response.status_code != 200:
-            return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
         response = user_response.json()
         is_teacher = "@gimb.org" in response["mail"]  # dijaki imajo @dijaki.gimb.org mejl. Torej lahko zdeduciramo, da so @gimb.org naslovi rezervirani za učitelje
         first_name: str = response["givenName"]  # Ime
@@ -935,7 +935,7 @@ async def admin_user_account_create(request: Request, user_id: str):
     async with connection.begin() as session:
         u = (await session.execute(select(User).filter_by(user_id=user_id))).one_or_none()
         if u is not None:
-            return RedirectResponse(app.url_path_for("admin"))
+            return RedirectResponse(referer)
         u = User(
             user_id=user_id,
             email=user_principal_name,
@@ -947,7 +947,7 @@ async def admin_user_account_create(request: Request, user_id: str):
             is_teacher=is_teacher,
         )
         session.add(u)
-    return RedirectResponse(app.url_path_for("admin"), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get("/image/{image_id}/move/{up_down}")
