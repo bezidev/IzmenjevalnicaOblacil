@@ -399,6 +399,10 @@ TRANSLATIONS: dict[str, dict] = {
         "en": "⬛ Black",
         "sl": "⬛ Črna",
     },
+    "colorful": {
+        "en": "🌈 Colorful/multicolored",
+        "sl": "🌈 Pisana/večbarvna",
+    },
 
     "cotton": {
         "en": "Cotton",
@@ -451,6 +455,18 @@ TRANSLATIONS: dict[str, dict] = {
     "artificial_materials": {
         "en": "Other artificial materials",
         "sl": "Drugi umetni materiali",
+    },
+    "leather": {
+        "en": "Leather",
+        "sl": "Usnje",
+    },
+    "artificial_leather": {
+        "en": "Artificial leather",
+        "sl": "Umetno usnje",
+    },
+    "viscose": {
+        "en": "Rayon/Viscose",
+        "sl": "Viskoza",
     },
     "select_color": {
         "en": "Select a color",
@@ -595,6 +611,18 @@ TRANSLATIONS: dict[str, dict] = {
     "reservation_date": {
         "en": "Reservation date",
         "sl": "Datum rezervacije",
+    },
+    "admin_panel_split": {
+        "en": "Administrator panel has been split for better clarity. Please follow the links below:",
+        "sl": "Administratorska plošča je bila razdrobljena za večjo preglednost. Prosimo, sledite spodnjim povezavam:",
+    },
+    "filters": {
+        "en": "Filters",
+        "sl": "Filtri",
+    },
+    "clear_filters": {
+        "en": "Clear filters",
+        "sl": "Počisti filtre",
     }
 }
 

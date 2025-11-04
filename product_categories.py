@@ -128,6 +128,7 @@ COLORS = [
     "brown",
     "grey",
     "black",
+    "colorful",
 ]
 
 MATERIALS = [
@@ -142,6 +143,9 @@ MATERIALS = [
     "polyester", # Poliester
     "spandex", # Elastan
     "nylon", # Najlon
+    "leather", # Usnje
+    "artificial_leather", # Umetno usnje
+    "viscose", # Viskoza
     "mixed_materials", # Mešano
     "artificial_materials", # Drugi umetni materiali
 ]

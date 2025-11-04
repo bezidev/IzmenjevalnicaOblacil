@@ -47,6 +47,14 @@
             align-content: center;
             max-height: 100%;
         }
+
+         .row {
+          display: flex;
+        }
+
+        .column {
+          flex: 50%;
+        }
     </style>
 </head>
 <body>
@@ -67,6 +75,74 @@
         {% else %}
             <div></div>
         {% endif %}
+        <dialog id="filters">
+            <article>
+                <header>
+                    <button aria-label="{{ "close"|translate(lang) }}" rel="prev"
+                            onclick="document.getElementById('filters').close()"></button>
+                    <p>
+                        <strong>🔧 {{ "filters"|translate(lang) }}</strong>
+                    </p>
+                </header>
+                <form action="{{ url_for('home') }}" method="post">
+                    <div style="width: 100%;" class="row">
+                        <div class="column">
+                            <span style="padding: 5px; font-weight: bold;">{{ "product_types"|translate(lang) }}</span>
+                            {% for c in CATEGORIES %}
+                                {% set category = PRODUCT_CATEGORIES[c] %}
+                                <label>
+                                    <input type="checkbox" name="{{ category["html_uid"] }}" {% if filters["filter_" + category["html_uid"]] %}checked{% endif %}/>
+                                    {{ category["emoji"] }} {{ category["name_" + lang] }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="column">
+                            {% if is_admin %}
+                                <span style="padding: 5px; font-weight: bold;">{{ "product_states"|translate(lang) }}</span>
+                                <label>
+                                    <input type="checkbox" name="active" {% if filters["filter_active"] %}checked{% endif %}/>
+                                    {{ "active"|translate(lang) }}
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="archived" {% if filters["filter_archived"] %}checked{% endif %}/>
+                                    {{ "archived"|translate(lang) }}
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="draft" {% if filters["filter_draft"] %}checked{% endif %}/>
+                                    {{ "draft"|translate(lang) }}
+                                </label>
+                            {% endif %}
+                            {% if is_teacher or is_admin %}
+                                <p></p>
+                                <fieldset>
+                                    <label>
+                                        <input name="teacher" type="checkbox" role="switch" {% if filters["filter_teacher"] %}checked{% endif %} />
+                                        {{ "show_only_teacher_products"|translate(lang) }}
+                                    </label>
+                                </fieldset>
+                            {% endif %}
+                            {% if name != None %}
+                                <fieldset>
+                                    <label>
+                                        <input name="my_reservations" type="checkbox" role="switch" {% if filters["filter_my_reservations"] %}checked{% endif %} />
+                                        {{ "show_only_my_reservations"|translate(lang) }}
+                                    </label>
+                                </fieldset>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="height: 30px;"></div>
+                    <footer>
+                        <div style="display: flex;">
+                            <button class="secondary" style="flex: 1 1 0; height: 100%;"
+                                    onclick="document.getElementById('filters').close()">{{ "cancel"|translate(lang) }}</button>
+                            <a href="{{ url_for("home") }}" style="flex: 1 1 0; height: 100%; width: 100%;"><button class="secondary" type="button" style="width: 100%;">{{ "clear_filters"|translate(lang) }}</button></a>
+                            <button style="flex: 1 1 0; height: 100%;" type="submit">{{ "confirm_filters"|translate(lang) }}</button>
+                        </div>
+                    </footer>
+                </form>
+            </article>
+        </dialog>
         <div style="display: flex; flex-direction: column;">
             <form method="POST" action="{{ url_for('home') }}" id="sort-form">
                 <select name="sorting_method" aria-label="{{ "sort"|translate(lang) }}" style="width: fit-content;" onchange="sort()">
@@ -79,63 +155,8 @@
                     <option value="size-asc" {% if sorting_method == "size-asc" %}selected{% endif %}>{{ "increasing_size"|translate(lang) }}</option>
                     <option value="size-desc" {% if sorting_method == "size-desc" %}selected{% endif %}>{{ "decreasing_size"|translate(lang) }}</option>
                 </select>
-                <details class="dropdown">
-                    <summary>
-                        {{ "select_filters"|translate(lang) }}
-                    </summary>
-                    <ul style="padding: 0 10px;">
-                        {% if is_admin %}
-                            <span style="padding: 5px; font-weight: bold;">{{ "product_states"|translate(lang) }}</span>
-                            <li>
-                                <label>
-                                    <input type="checkbox" name="active" {% if filters["filter_active"] %}checked{% endif %}/>
-                                    {{ "active"|translate(lang) }}
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" name="archived" {% if filters["filter_archived"] %}checked{% endif %}/>
-                                    {{ "archived"|translate(lang) }}
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" name="draft" {% if filters["filter_draft"] %}checked{% endif %}/>
-                                    {{ "draft"|translate(lang) }}
-                                </label>
-                            </li>
-                        {% endif %}
-                        {% if is_teacher or is_admin %}
-                            <p></p>
-                            <fieldset>
-                                <label>
-                                    <input name="teacher" type="checkbox" role="switch" {% if filters["filter_teacher"] %}checked{% endif %} />
-                                    {{ "show_only_teacher_products"|translate(lang) }}
-                                </label>
-                            </fieldset>
-                        {% endif %}
-                        {% if name != None %}
-                            <fieldset>
-                                <label>
-                                    <input name="my_reservations" type="checkbox" role="switch" {% if filters["filter_my_reservations"] %}checked{% endif %} />
-                                    {{ "show_only_my_reservations"|translate(lang) }}
-                                </label>
-                            </fieldset>
-                        {% endif %}
-                        <span style="padding: 5px; font-weight: bold;">{{ "product_types"|translate(lang) }}</span>
-                        {% for c in CATEGORIES %}
-                            {% set category = PRODUCT_CATEGORIES[c] %}
-                            <li>
-                                <label>
-                                    <input type="checkbox" name="{{ category["html_uid"] }}" {% if filters["filter_" + category["html_uid"]] %}checked{% endif %}/>
-                                    {{ category["emoji"] }} {{ category["name_" + lang] }}
-                                </label>
-                            </li>
-                        {% endfor %}
-                        <button type="submit">{{ "confirm_filters"|translate(lang) }}</button>
-                    </ul>
-                </details>
             </form>
+            <button onclick="document.getElementById('filters').showModal()" class="secondary">{{ "select_filters"|translate(lang) }}</button>
         </div>
     </div>
     {% if name != None %}
@@ -229,6 +250,7 @@
             {% endfor %}
         </div>
     {% else %}
+        <p></p>
         <span style="font-size: 5em; font-weight: bold;">(>_<)</span>
         <h3>{{ "no_results"|translate(lang) }}</h3>
     {% endif %}

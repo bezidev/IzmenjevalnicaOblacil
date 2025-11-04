@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 from typing import List
 
 import httpx
@@ -118,6 +119,7 @@ async def send_mail():
         message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
         message["From"] = EMAIL_USERNAME
         message["To"] = ", ".join(SEND_MAILS_PEOPLE)
+        message["Date"] = formatdate(localtime=True)
         message.attach(MIMEText(reservation, "html"))
         with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
             server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
@@ -227,6 +229,9 @@ async def home(
         active = True
         archived = False
         draft = True
+
+    select_all = False
+
     if (
             not hat and
             not sunglasses and
@@ -244,22 +249,7 @@ async def home(
             not men_shoes and
             not women_shoes and
             not accessories):
-        hat = True
-        sunglasses = True
-        men_sweater = True
-        women_sweater = True
-        unisex_sweater = True
-        men_shirts = True
-        women_shirts = True
-        men_jacket = True
-        women_jacket = True
-        men_pants = True
-        women_pants = True
-        women_skirts = True
-        women_dress = True
-        men_shoes = True
-        women_shoes = True
-        accessories = True
+        select_all = True
 
     reserved_products = 0
     async with connection.begin() as session:
@@ -292,6 +282,10 @@ async def home(
             elif draft and product.draft:
                 products_filtered.append(product)
         for product in products_filtered:
+            if select_all:
+                products_filtered2.append(product)
+                continue
+
             if hat and product.category == "hat":
                 products_filtered2.append(product)
             elif sunglasses and product.category == "sunglasses":
@@ -814,10 +808,42 @@ async def delete_image(request: Request, image_id: str, referer: typing.Annotate
 
     return RedirectResponse(referer, status_code=status.HTTP_303_SEE_OTHER)
 
+@app.get("/admin")
+async def admin(request: Request):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+    return templates.TemplateResponse(request=request, name="admin.jinja")
 
-@app.get("/admin/panel")
-@app.post("/admin/panel")
-async def admin(request: Request, user_name: str = Form("")):
+@app.get("/admin/reservations")
+async def admin_reservations(request: Request):
+    user = get_session_user(request.cookies.get("session"))
+    is_admin = False if user is None else user.user.is_admin
+    if not is_admin:
+        return RedirectResponse(app.url_path_for("home"))
+
+    async with connection.begin() as session:
+        users = (await session.execute(select(User).order_by(User.surname))).all()
+        users: List[User] = [user[0] for user in users]
+
+        reservations = (await session.execute(select(Product).filter(Product.reserved_by_id is not None and Product.reserved_by_id != "").filter_by(archived=False))).all()
+        reservations: List[Product] = [product[0] for product in reservations]
+        for user in users:
+            for i, v in enumerate(reservations):
+                if user.user_id != v.reserved_by_id:
+                    continue
+                reservations[i].reserved_by = user
+        reservations.sort(key=lambda e: e.reserved_by.surname)
+    return templates.TemplateResponse(
+        request=request, name="admin_reservations.jinja", context={
+            "reservations": reservations,
+        }
+    )
+
+@app.get("/admin/users")
+@app.post("/admin/users")
+async def admin_users(request: Request, user_name: str = Form("")):
     user = get_session_user(request.cookies.get("session"))
     is_admin = False if user is None else user.user.is_admin
     if not is_admin:
@@ -837,23 +863,12 @@ async def admin(request: Request, user_name: str = Form("")):
     async with connection.begin() as session:
         users = (await session.execute(select(User).order_by(User.surname))).all()
         users: List[User] = [user[0] for user in users]
-
-        reservations = (await session.execute(select(Product).filter(Product.reserved_by_id is not None and Product.reserved_by_id != "").filter_by(archived=False))).all()
-        reservations: List[Product] = [product[0] for product in reservations]
-        for user in users:
-            for i, v in enumerate(reservations):
-                if user.user_id != v.reserved_by_id:
-                    continue
-                reservations[i].reserved_by = user
-        reservations.sort(key=lambda e: e.reserved_by.surname)
     return templates.TemplateResponse(
-        request=request, name="admin.jinja", context={
+        request=request, name="admin_users.jinja", context={
             "users": users,
-            "reservations": reservations,
             "search_results": search_results,
         }
     )
-
 
 @app.post("/admin/user/{user_id}/manage")
 async def admin_user_manage_post(request: Request, user_id: str, credits: int = Form(0), admin: bool = Form(False), teacher: bool = Form(False)):
