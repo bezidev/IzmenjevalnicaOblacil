@@ -623,6 +623,50 @@ TRANSLATIONS: dict[str, dict] = {
     "clear_filters": {
         "en": "Clear filters",
         "sl": "Počisti filtre",
+    },
+    "colors": {
+        "en": "Colors",
+        "sl": "Barve",
+    },
+    "genders": {
+        "en": "Genders",
+        "sl": "Spol",
+    },
+    "materials": {
+        "en": "Materials",
+        "sl": "Materiali",
+    },
+    "sizes": {
+        "en": "Sizes",
+        "sl": "Velikosti",
+    },
+    "from": {
+        "en": "From",
+        "sl": "Od",
+    },
+    "to": {
+        "en": "To",
+        "sl": "Do",
+    },
+    "shoe_sizes": {
+        "en": "Shoe sizes",
+        "sl": "Velikosti čevljev",
+    },
+    "gender_male": {
+        "en": "Male",
+        "sl": "Moški",
+    },
+    "gender_female": {
+        "en": "Female",
+        "sl": "Ženski",
+    },
+    "gender_unisex": {
+        "en": "Unisex",
+        "sl": "Unisex",
+    },
+    "preservation": {
+        "en": "Preservation",
+        "sl": "Ohranjenost",
     }
 }
 

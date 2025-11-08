@@ -42,6 +42,7 @@ class Product(Base):
     reserved_by_id = Column(String(50))
     reserved_date = Column(Integer)
     reservation_mail_sent = Column(Boolean)
+    gender = Column(String)
 
     published_by = Column(String(50))
     published_at = Column(Integer)

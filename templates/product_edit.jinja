@@ -30,7 +30,7 @@
                     <option value="{{ category }}" {% if product.category == category %}selected{% endif %}>{{ PRODUCT_CATEGORIES[category]["emoji"] }} {{ PRODUCT_CATEGORIES[category]["name_" + lang] }}</option>
                 {% endfor %}
             </select>
-            {% if PRODUCT_CATEGORIES[product.category]["has_size"] and (product.category == "men-shoes" or product.category == "women-shoes") %}
+            {% if PRODUCT_CATEGORIES[product.category]["has_size"] and product.category == "shoes" %}
                 <div style="width: 5px;"></div>
                 <input type="number" name="size" placeholder="{{ "write_size"|translate(lang) }}" aria-label="{{ "write_size"|translate(lang) }}" value="{{ product.size }}">
             {% elif PRODUCT_CATEGORIES[product.category]["has_size"] %}
@@ -61,24 +61,31 @@
                 {% endfor %}
             </select>
         </div>
-        <select name="state" aria-label="{{ "product_state"|translate(lang) }}">
-            <option value="-1" {% if product.state == -1 %}selected{% endif %}>{{ "product_state_unknown"|translate(lang) }}</option>
-            <option value="50" {% if product.state == 50 %}selected{% endif %}>
-                {{ "product_state_poor"|translate(lang) }}
-            </option>
-            <option value="75" {% if product.state == 75 %}selected{% endif %}>
-                {{ "product_state_medium"|translate(lang) }}
-            </option>
-            <option value="100" {% if product.state == 100 %}selected{% endif %}>
-                {{ "product_state_good"|translate(lang) }}
-            </option>
-            <option value="200" {% if product.state == 200 %}selected{% endif %}>
-                {{ "product_state_great"|translate(lang) }}
-            </option>
-            <option value="300" {% if product.state == 300 %}selected{% endif %}>
-                {{ "product_state_excellent"|translate(lang) }}
-            </option>
-        </select>
+        <div class="shared-width">
+            <select name="state" aria-label="{{ "product_state"|translate(lang) }}">
+                <option value="-1" {% if product.state == -1 %}selected{% endif %}>{{ "product_state_unknown"|translate(lang) }}</option>
+                <option value="50" {% if product.state == 50 %}selected{% endif %}>
+                    {{ "product_state_poor"|translate(lang) }}
+                </option>
+                <option value="75" {% if product.state == 75 %}selected{% endif %}>
+                    {{ "product_state_medium"|translate(lang) }}
+                </option>
+                <option value="100" {% if product.state == 100 %}selected{% endif %}>
+                    {{ "product_state_good"|translate(lang) }}
+                </option>
+                <option value="200" {% if product.state == 200 %}selected{% endif %}>
+                    {{ "product_state_great"|translate(lang) }}
+                </option>
+                <option value="300" {% if product.state == 300 %}selected{% endif %}>
+                    {{ "product_state_excellent"|translate(lang) }}
+                </option>
+            </select>
+            <select name="gender" aria-label="{{ "gender"|translate(lang) }}">
+                <option value="male" {% if product.gender == "male" %}selected{% endif %}>{{ "gender_male"|translate(lang) }}</option>
+                <option value="female" {% if product.gender == "female" %}selected{% endif %}>{{ "gender_female"|translate(lang) }}</option>
+                <option value="unisex" {% if product.gender == "unisex" %}selected{% endif %}>{{ "gender_unisex"|translate(lang) }}</option>
+            </select>
+        </div>
         <textarea name="description" id="description" placeholder="{{ "product_description_helper"|translate(lang) }}" aria-label="{{ "product_description_helper"|translate(lang) }}" onkeyup="renderDescription()" rows="10">{{ product.description }}</textarea>
         <h4>{{ "description_preview"|translate(lang) }}</h4>
         <hr>

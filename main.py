@@ -154,6 +154,32 @@ async def lifespan(app: FastAPI):
         print("Creating database!")
         await conn.run_sync(Base.metadata.create_all)
     asyncio.create_task(send_mails_coroutine())
+
+    # One-time migrations
+    async with connection.begin() as session:
+        products = (await session.execute(select(Product))).all()
+        for product in products:
+            product = product[0]
+            product.gender = "unisex"
+            if "women" in product.category:
+                product.gender = "women"
+            elif "men" in product.category:
+                product.gender = "men"
+
+            if "sweater" in product.category:
+                product.category = "sweater"
+            if "shirts" in product.category:
+                product.category = "shirts"
+            if "jacket" in product.category:
+                product.category = "jacket"
+            if "pants" in product.category:
+                product.category = "pants"
+            if "skirts" in product.category:
+                product.category = "skirts"
+            if "dress" in product.category:
+                product.category = "dresses"
+            if "shoes" in product.category:
+                product.category = "shoes"
     yield
     # Executed after end
 
@@ -199,22 +225,17 @@ async def home(
         active: bool = False,
         archived: bool = False,
         draft: bool = False,
-        hat: bool = False,
-        sunglasses: bool = False,
-        men_sweater: bool = False,
-        women_sweater: bool = False,
-        unisex_sweater: bool = False,
-        men_shirts: bool = False,
-        women_shirts: bool = False,
-        men_jacket: bool = False,
-        women_jacket: bool = False,
-        men_pants: bool = False,
-        women_pants: bool = False,
-        women_dress: bool = False,
-        women_skirts: bool = False,
-        men_shoes: bool = False,
-        women_shoes: bool = False,
-        accessories: bool = False,
+
+        categories: str = "",
+        colors: str = "",
+        genders: str = "",
+        materials: str = "",
+        sizes: str = "",
+        states: str = "",
+
+        size_from: int = -1,
+        size_to: int = -1,
+
         teacher: bool = False,
         my_reservations: bool = False,
 ):
@@ -230,29 +251,81 @@ async def home(
         archived = False
         draft = True
 
-    select_all = False
+    if not (size_from < 0 or size_to < 0) and size_to < size_from:
+        size_from, size_to = size_to, size_from
 
-    if (
-            not hat and
-            not sunglasses and
-            not men_sweater and
-            not women_sweater and
-            not unisex_sweater and
-            not men_shirts and
-            not women_shirts and
-            not men_jacket and
-            not women_jacket and
-            not men_pants and
-            not women_pants and
-            not women_skirts and
-            not women_dress and
-            not men_shoes and
-            not women_shoes and
-            not accessories):
-        select_all = True
+    select_all_categories = True
+    select_all_genders = True
+    select_all_materials = True
+    select_all_colors = True
+    select_all_sizes = True
+    select_all_shoe_sizes = True
+    select_all_states = True
+
+    if categories != "":
+        categories = categories.split(",")
+        select_all_categories = False
+        for i in categories:
+            if i not in CATEGORIES:
+                select_all_categories = True
+                break
+    else:
+        categories = []
+
+    if genders != "":
+        genders = genders.split(",")
+        select_all_genders = False
+        for i in genders:
+            if i not in ["male", "female", "unisex"]:
+                select_all_genders = True
+                break
+    else:
+        genders = []
+
+    if materials != "":
+        materials = materials.split(",")
+        select_all_materials = False
+        for i in materials:
+            if i not in MATERIALS:
+                select_all_materials = True
+                break
+    else:
+        materials = []
+
+    if colors != "":
+        colors = colors.split(",")
+        select_all_colors = False
+        for i in colors:
+            if i not in COLORS:
+                select_all_colors = True
+                break
+    else:
+        colors = []
+
+    if sizes != "":
+        sizes = sizes.split(",")
+        select_all_sizes = False
+        for i in sizes:
+            if i not in ["XXS", "XS", "S", "M", "L", "XL", "XXL"]:
+                select_all_sizes = True
+                break
+    else:
+        sizes = []
+    if size_from >= 0 or size_to >= 0:
+        select_all_shoe_sizes = False
+
+    if states != "":
+        states = states.split(",")
+        select_all_states = False
+        for i in states:
+            if int(i) not in ALLOWED_PRODUCT_STATES:
+                select_all_states = True
+                break
+    else:
+        states = []
 
     reserved_products = 0
-    async with connection.begin() as session:
+    async with (connection.begin() as session):
         if is_admin:
             products = (await session.execute(select(Product).filter_by())).all()
         else:
@@ -264,6 +337,11 @@ async def home(
         products: List[Product] = [product[0] for product in products]
         products_filtered = []
         products_filtered2 = []
+        products_filtered3 = []
+        products_filtered4 = []
+        products_filtered5 = []
+        products_filtered6 = []
+        products_filtered7 = []
         for product in products:
             if product.reserved_by_id == (user.user.user_id if user is not None else ""):
                 reserved_products += 1
@@ -281,89 +359,113 @@ async def home(
                 products_filtered.append(product)
             elif draft and product.draft:
                 products_filtered.append(product)
-        for product in products_filtered:
-            if select_all:
-                products_filtered2.append(product)
+
+        if not select_all_categories:
+            for product in products_filtered:
+                if product.category in categories:
+                    products_filtered2.append(product)
+        else:
+            products_filtered2 = products_filtered
+
+        if not select_all_genders:
+            for product in products_filtered2:
+                if product.gender in genders:
+                    products_filtered3.append(product)
+        else:
+            products_filtered3 = products_filtered2
+
+        if not select_all_colors:
+            for product in products_filtered3:
+                if product.color in colors:
+                    products_filtered4.append(product)
+        else:
+            products_filtered4 = products_filtered3
+
+        if not select_all_materials:
+            for product in products_filtered4:
+                if product.material in materials:
+                    products_filtered5.append(product)
+        else:
+            products_filtered5 = products_filtered4
+
+        for product in products_filtered5:
+            if not PRODUCT_CATEGORIES[product.category]["has_size"]:
+                products_filtered6.append(product)
                 continue
 
-            if hat and product.category == "hat":
-                products_filtered2.append(product)
-            elif sunglasses and product.category == "sunglasses":
-                products_filtered2.append(product)
-            elif men_sweater and product.category == "men-sweater":
-                products_filtered2.append(product)
-            elif women_sweater and product.category == "women-sweater":
-                products_filtered2.append(product)
-            elif unisex_sweater and product.category == "unisex-sweater":
-                products_filtered2.append(product)
-            elif men_shirts and product.category == "men-shirts":
-                products_filtered2.append(product)
-            elif women_shirts and product.category == "women-shirts":
-                products_filtered2.append(product)
-            elif men_jacket and product.category == "men-jacket":
-                products_filtered2.append(product)
-            elif women_jacket and product.category == "women-jacket":
-                products_filtered2.append(product)
-            elif men_pants and product.category == "men-pants":
-                products_filtered2.append(product)
-            elif women_pants and product.category == "women-pants":
-                products_filtered2.append(product)
-            elif women_skirts and product.category == "women-skirts":
-                products_filtered2.append(product)
-            elif women_dress and product.category == "women-dress":
-                products_filtered2.append(product)
-            elif men_shoes and product.category == "men-shoes":
-                products_filtered2.append(product)
-            elif women_shoes and product.category == "women-shoes":
-                products_filtered2.append(product)
-            elif accessories and product.category == "accessories":
-                products_filtered2.append(product)
+            if product.category == "shoes":
+                if select_all_shoe_sizes:
+                    products_filtered6.append(product)
+                    continue
+
+                try:
+                    sz = int(product.size)
+                except:
+                    print(f"[ERROR] Parsing shoe size: {product.size}")
+                    continue
+                if (size_from < 0 or sz >= size_from) and (size_to < 0 or sz <= size_to):
+                    products_filtered6.append(product)
+            else:
+                if select_all_sizes:
+                    products_filtered6.append(product)
+                    continue
+
+                if product.size in sizes:
+                    products_filtered6.append(product)
+
+        if not select_all_states:
+            for product in products_filtered6:
+                if str(product.state) in states:
+                    products_filtered7.append(product)
+        else:
+            products_filtered7 = products_filtered6
+
+        products_final = products_filtered7
+
         if sort == "":
-            products_filtered2.sort(key=sort_by_modified_date, reverse=True)
+            products_final.sort(key=sort_by_modified_date, reverse=True)
         elif sort == "last-changed-asc":
-            products_filtered2.sort(key=sort_by_modified_date)
+            products_final.sort(key=sort_by_modified_date)
         elif sort == "created-desc":
-            products_filtered2.sort(key=sort_by_creation_date, reverse=True)
+            products_final.sort(key=sort_by_creation_date, reverse=True)
         elif sort == "created-asc":
-            products_filtered2.sort(key=sort_by_creation_date)
+            products_final.sort(key=sort_by_creation_date)
         elif sort == "alphabet-asc":
-            products_filtered2.sort(key=sort_by_name)
+            products_final.sort(key=sort_by_name)
         elif sort == "alphabet-desc":
-            products_filtered2.sort(key=sort_by_name, reverse=True)
+            products_final.sort(key=sort_by_name, reverse=True)
         elif sort == "size-asc":
-            products_filtered2.sort(key=sort_by_size)
+            products_final.sort(key=sort_by_size)
         elif sort == "size-desc":
-            products_filtered2.sort(key=sort_by_size, reverse=True)
+            products_final.sort(key=sort_by_size, reverse=True)
+
+    if size_to < 0:
+        size_to = None
+    if size_from < 0:
+        size_from = None
+
     return templates.TemplateResponse(
         request=request, name="home.jinja", context={
             "login_success": login_success,
             "name": name,
             "is_admin": is_admin,
             "is_teacher": is_teacher,
-            "products": products_filtered2,
+            "products": products_final,
             "sorting_method": sort,
             "credits": credits,
             "reserved_products": reserved_products,
+            "filter_categories": categories,
+            "filter_sizes": sizes,
+            "filter_colors": colors,
+            "filter_materials": materials,
+            "filter_genders": genders,
+            "filter_size_from": size_from,
+            "filter_size_to": size_to,
+            "filter_states": states,
             "filters": {
                 "filter_active": active,
                 "filter_archived": archived,
                 "filter_draft": draft,
-                "filter_hat": hat,
-                "filter_sunglasses": sunglasses,
-                "filter_men_sweater": men_sweater,
-                "filter_women_sweater": women_sweater,
-                "filter_unisex_sweater": unisex_sweater,
-                "filter_men_shirts": men_shirts,
-                "filter_women_shirts": women_shirts,
-                "filter_men_jacket": men_jacket,
-                "filter_women_jacket": women_jacket,
-                "filter_men_pants": men_pants,
-                "filter_women_pants": women_pants,
-                "filter_women_skirts": women_skirts,
-                "filter_women_dress": women_dress,
-                "filter_men_shoes": men_shoes,
-                "filter_women_shoes": women_shoes,
-                "filter_accessories": accessories,
                 "filter_teacher": teacher,
                 "filter_my_reservations": my_reservations,
             },
@@ -377,66 +479,225 @@ async def home_post(
         active: bool = Form(False),
         archived: bool = Form(False),
         draft: bool = Form(False),
+
         hat: bool = Form(False),
         sunglasses: bool = Form(False),
-        men_sweater: bool = Form(False),
-        women_sweater: bool = Form(False),
-        unisex_sweater: bool = Form(False),
-        men_shirts: bool = Form(False),
-        women_shirts: bool = Form(False),
-        men_jacket: bool = Form(False),
-        women_jacket: bool = Form(False),
-        men_pants: bool = Form(False),
-        women_pants: bool = Form(False),
-        women_skirts: bool = Form(False),
-        women_dress: bool = Form(False),
-        men_shoes: bool = Form(False),
-        women_shoes: bool = Form(False),
+        sweater: bool = Form(False),
+        cardigans: bool = Form(False),
+        shirts: bool = Form(False),
+        blouses: bool = Form(False),
+        jacket: bool = Form(False),
+        pants: bool = Form(False),
+        skirts: bool = Form(False),
+        dresses: bool = Form(False),
+        shoes: bool = Form(False),
         accessories: bool = Form(False),
+
+        gender_male: bool = Form(False),
+        gender_female: bool = Form(False),
+        gender_unisex: bool = Form(False),
+
+        cotton: bool = Form(False),
+        kapok: bool = Form(False),
+        hemp: bool = Form(False),
+        flax: bool = Form(False),
+        wool: bool = Form(False),
+        mohair: bool = Form(False),
+        silk: bool = Form(False),
+        feathers: bool = Form(False),
+        polyester: bool = Form(False),
+        spandex: bool = Form(False),
+        nylon: bool = Form(False),
+        leather: bool = Form(False),
+        artificial_leather: bool = Form(False),
+        viscose: bool = Form(False),
+        mixed_materials: bool = Form(False),
+        artificial_materials: bool = Form(False),
+
+        red: bool = Form(False),
+        orange: bool = Form(False),
+        yellow: bool = Form(False),
+        green: bool = Form(False),
+        cyan: bool = Form(False),
+        blue: bool = Form(False),
+        pink: bool = Form(False),
+        purple: bool = Form(False),
+        beige: bool = Form(False),
+        white: bool = Form(False),
+        brown: bool = Form(False),
+        grey: bool = Form(False),
+        black: bool = Form(False),
+        colorful: bool = Form(False),
+
+        size_xxs: bool = Form(False),
+        size_xs: bool = Form(False),
+        size_s: bool = Form(False),
+        size_m: bool = Form(False),
+        size_l: bool = Form(False),
+        size_xl: bool = Form(False),
+        size_xxl: bool = Form(False),
+
+        size_from: int = Form(-1),
+        size_to: int = Form(-1),
+
+        state_unknown: bool = Form(False),
+        state_poor: bool = Form(False),
+        state_medium: bool = Form(False),
+        state_good: bool = Form(False),
+        state_great: bool = Form(False),
+        state_excellent: bool = Form(False),
+
         teacher: bool = Form(False),
         my_reservations: bool = Form(False),
 ):
     encode: dict[str, str | bool] = {
         "sort": sorting_method,
+        "size_from": size_from,
+        "size_to": size_to,
     }
+
+    categories = []
+    genders = []
+    materials = []
+    colors = []
+    sizes = []
+    states = []
+
     if active:
         encode["active"] = True
     if archived:
         encode["archived"] = True
     if draft:
         encode["draft"] = True
+
     if accessories:
-        encode["accessories"] = True
+        categories.append("accessories")
     if hat:
-        encode["hat"] = True
+        categories.append("hat")
     if sunglasses:
-        encode["sunglasses"] = True
-    if men_sweater:
-        encode["men_sweater"] = True
-    if women_sweater:
-        encode["women_sweater"] = True
-    if unisex_sweater:
-        encode["unisex_sweater"] = True
-    if men_shirts:
-        encode["men_shirts"] = True
-    if women_shirts:
-        encode["women_shirts"] = True
-    if men_jacket:
-        encode["men_jacket"] = True
-    if women_jacket:
-        encode["women_jacket"] = True
-    if men_pants:
-        encode["men_pants"] = True
-    if women_pants:
-        encode["women_pants"] = True
-    if women_skirts:
-        encode["women_skirts"] = True
-    if women_dress:
-        encode["women_dress"] = True
-    if men_shoes:
-        encode["men_shoes"] = True
-    if women_shoes:
-        encode["women_shoes"] = True
+        categories.append("sunglasses")
+    if sweater:
+        categories.append("sweater")
+    if cardigans:
+        categories.append("cardigans")
+    if shirts:
+        categories.append("shirts")
+    if blouses:
+        categories.append("blouses")
+    if jacket:
+        categories.append("jacket")
+    if pants:
+        categories.append("pants")
+    if skirts:
+        categories.append("skirts")
+    if dresses:
+        categories.append("dresses")
+    if shoes:
+        categories.append("shoes")
+    encode["categories"] = ",".join(categories)
+
+    if gender_male:
+        genders.append("male")
+    if gender_female:
+        genders.append("female")
+    if gender_unisex:
+        genders.append("unisex")
+    encode["genders"] = ",".join(genders)
+
+    if cotton:
+        materials.append("cotton")
+    if kapok:
+        materials.append("kapok")
+    if hemp:
+        materials.append("hemp")
+    if flax:
+        materials.append("flax")
+    if wool:
+        materials.append("wool")
+    if mohair:
+        materials.append("mohair")
+    if silk:
+        materials.append("silk")
+    if feathers:
+        materials.append("feathers")
+    if polyester:
+        materials.append("polyester")
+    if spandex:
+        materials.append("spandex")
+    if nylon:
+        materials.append("nylon")
+    if leather:
+        materials.append("leather")
+    if artificial_leather:
+        materials.append("artificial_leather")
+    if viscose:
+        materials.append("viscose")
+    if mixed_materials:
+        materials.append("mixed_materials")
+    if artificial_materials:
+        materials.append("artificial_materials")
+    encode["materials"] = ",".join(materials)
+
+    if red:
+        colors.append("red")
+    if orange:
+        colors.append("orange")
+    if yellow:
+        colors.append("yellow")
+    if green:
+        colors.append("green")
+    if cyan:
+        colors.append("cyan")
+    if blue:
+        colors.append("blue")
+    if pink:
+        colors.append("pink")
+    if purple:
+        colors.append("purple")
+    if beige:
+        colors.append("beige")
+    if white:
+        colors.append("white")
+    if brown:
+        colors.append("brown")
+    if grey:
+        colors.append("grey")
+    if black:
+        colors.append("black")
+    if colorful:
+        colors.append("colorful")
+    encode["colors"] = ",".join(colors)
+
+    if size_xxs:
+        sizes.append("XXS")
+    if size_xs:
+        sizes.append("XS")
+    if size_s:
+        sizes.append("S")
+    if size_m:
+        sizes.append("M")
+    if size_l:
+        sizes.append("L")
+    if size_xl:
+        sizes.append("XL")
+    if size_xxl:
+        sizes.append("XXL")
+    encode["sizes"] = ",".join(sizes)
+
+    if state_unknown:
+        states.append("-1")
+    if state_poor:
+        states.append("50")
+    if state_medium:
+        states.append("75")
+    if state_good:
+        states.append("100")
+    if state_great:
+        states.append("200")
+    if state_excellent:
+        states.append("300")
+    encode["states"] = ",".join(states)
+
     if teacher:
         encode["teacher"] = True
     if my_reservations:
@@ -536,6 +797,7 @@ async def new_product_post(request: Request, name: str = Form(""), brand: str = 
             state=-1,
             color="",
             material="",
+            gender="unisex",
             reserved_by_id="",
             reserved_date=0,
             published_by=user.user.user_id,
@@ -557,6 +819,7 @@ async def product_edit_post(request: Request,
                             material: str = Form(""),
                             color: str = Form(""),
                             state: int = Form(-1),
+                            gender: str = Form(""),
                             archived: bool = Form(False),
                             teacher: bool = Form(False),
                             limit_to_teachers: bool = Form(False),
@@ -581,6 +844,8 @@ async def product_edit_post(request: Request,
         pi.size = size
         pi.archived = archived
         pi.teacher = teacher
+        if gender in ["male", "female", "unisex"]:
+            pi.gender = gender
         if teacher:
             pi.limit_to_teachers = limit_to_teachers
         else:

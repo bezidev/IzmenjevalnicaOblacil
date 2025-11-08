@@ -75,13 +75,13 @@
         {% else %}
             <div></div>
         {% endif %}
-        <dialog id="filters">
+        <dialog id="filters" style="width: 100%;">
             <article>
                 <header>
                     <button aria-label="{{ "close"|translate(lang) }}" rel="prev"
                             onclick="document.getElementById('filters').close()"></button>
                     <p>
-                        <strong>🔧 {{ "filters"|translate(lang) }}</strong>
+                        <strong>{{ "filters"|translate(lang) }}</strong>
                     </p>
                 </header>
                 <form action="{{ url_for('home') }}" method="post">
@@ -91,12 +91,107 @@
                             {% for c in CATEGORIES %}
                                 {% set category = PRODUCT_CATEGORIES[c] %}
                                 <label>
-                                    <input type="checkbox" name="{{ category["html_uid"] }}" {% if filters["filter_" + category["html_uid"]] %}checked{% endif %}/>
+                                    <input type="checkbox" name="{{ category["html_uid"] }}" {% if category["html_uid"] in filter_categories %}checked{% endif %}/>
                                     {{ category["emoji"] }} {{ category["name_" + lang] }}
+                                </label>
+                            {% endfor %}
+
+                            <div style="height: 30px;"></div>
+                            <span style="padding: 5px; font-weight: bold;">{{ "genders"|translate(lang) }}</span>
+                            <label>
+                                <input type="checkbox" name="gender_male" {% if "male" in filter_genders %}checked{% endif %}/>
+                                {{ "gender_male"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="gender_female" {% if "female" in filter_genders %}checked{% endif %}/>
+                                {{ "gender_female"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="gender_unisex" {% if "unisex" in filter_genders %}checked{% endif %}/>
+                                {{ "gender_unisex"|translate(lang) }}
+                            </label>
+                            <div style="height: 30px;"></div>
+                            <span style="padding: 5px; font-weight: bold;">{{ "materials"|translate(lang) }}</span>
+                            {% for c in MATERIALS %}
+                                <label>
+                                    <input type="checkbox" name="{{ c }}" {% if c in filter_materials %}checked{% endif %}/>
+                                    {{ c|translate(lang) }}
                                 </label>
                             {% endfor %}
                         </div>
                         <div class="column">
+                            <span style="padding: 5px; font-weight: bold;">{{ "colors"|translate(lang) }}</span>
+                            {% for color in COLORS %}
+                                <label>
+                                    <input type="checkbox" name="{{ color }}" {% if color in filter_colors %}checked{% endif %}/>
+                                    {{ color|translate(lang) }}
+                                </label>
+                            {% endfor %}
+                            <div style="height: 30px;"></div>
+                            <span style="padding: 5px; font-weight: bold;">{{ "sizes"|translate(lang) }}</span>
+                            <label>
+                                <input type="checkbox" name="size_xxs" {% if "XXS" in filter_sizes %}checked{% endif %}/>
+                                XXS
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_xs" {% if "XS" in filter_sizes %}checked{% endif %}/>
+                                XS
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_s" {% if "S" in filter_sizes %}checked{% endif %}/>
+                                S
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_m" {% if "M" in filter_sizes %}checked{% endif %}/>
+                                M
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_l" {% if "L" in filter_sizes %}checked{% endif %}/>
+                                L
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_xl" {% if "XL" in filter_sizes %}checked{% endif %}/>
+                                XL
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size_xxl" {% if "XXL" in filter_sizes %}checked{% endif %}/>
+                                XXL
+                            </label>
+
+                            <div style="height: 30px;"></div>
+                            <span style="padding: 5px; font-weight: bold;">{{ "shoe_sizes"|translate(lang) }}</span>
+                            <br>
+                            {{ "from"|translate(lang) }}: <input type="number" name="size_from" placeholder="{{ "from"|translate(lang) }}" aria-label="{{ "from"|translate(lang) }}" value="{{ filter_size_from }}">
+                            {{ "to"|translate(lang) }}: <input type="number" name="size_to" placeholder="{{ "to"|translate(lang) }}" aria-label="{{ "to"|translate(lang) }}" value="{{ filter_size_to }}">
+
+                            <div style="height: 30px;"></div>
+                            <span style="padding: 5px; font-weight: bold;">{{ "preservation"|translate(lang) }}</span>
+                            <label>
+                                <input type="checkbox" name="state_unknown" {% if "-1" in filter_states %}checked{% endif %}/>
+                                {{ "state_unknown"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="state_poor" {% if "50" in filter_states %}checked{% endif %}/>
+                                {{ "state_poor"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="state_medium" {% if "75" in filter_states %}checked{% endif %}/>
+                                {{ "state_medium"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="state_good" {% if "100" in filter_states %}checked{% endif %}/>
+                                {{ "state_good"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="state_great" {% if "200" in filter_states %}checked{% endif %}/>
+                                {{ "state_great"|translate(lang) }}
+                            </label>
+                            <label>
+                                <input type="checkbox" name="state_excellent" {% if "300" in filter_states %}checked{% endif %}/>
+                                {{ "state_excellent"|translate(lang) }}
+                            </label>
+
+                            <div style="height: 30px;"></div>
                             {% if is_admin %}
                                 <span style="padding: 5px; font-weight: bold;">{{ "product_states"|translate(lang) }}</span>
                                 <label>
@@ -112,6 +207,8 @@
                                     {{ "draft"|translate(lang) }}
                                 </label>
                             {% endif %}
+
+                            <div style="height: 30px;"></div>
                             {% if is_teacher or is_admin %}
                                 <p></p>
                                 <fieldset>
