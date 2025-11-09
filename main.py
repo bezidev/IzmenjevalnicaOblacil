@@ -156,32 +156,15 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(send_mails_coroutine())
 
     # One-time migrations
-    """
     async with connection.begin() as session:
         products = (await session.execute(select(Product))).all()
         for product in products:
             product = product[0]
-            product.gender = "unisex"
-            if "women" in product.category:
-                product.gender = "women"
-            elif "men" in product.category:
-                product.gender = "men"
+            if "women" == product.gender:
+                product.gender = "female"
+            elif "men" == product.gender:
+                product.gender = "male"
 
-            if "sweater" in product.category:
-                product.category = "sweater"
-            if "shirts" in product.category:
-                product.category = "shirts"
-            if "jacket" in product.category:
-                product.category = "jacket"
-            if "pants" in product.category:
-                product.category = "pants"
-            if "skirts" in product.category:
-                product.category = "skirts"
-            if "dress" in product.category:
-                product.category = "dresses"
-            if "shoes" in product.category:
-                product.category = "shoes"
-    """
     yield
     # Executed after end
 
