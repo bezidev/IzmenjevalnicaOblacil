@@ -34,6 +34,13 @@ PRODUCT_CATEGORIES = {
         "emoji": "👕",
         "has_size": True,
     },
+    "dress_shirts": {
+        "html_uid": "dress_shirts",
+        "name_sl": "Srajce",
+        "name_en": "Dress Shirts",
+        "emoji": "👔",
+        "has_size": True,
+    },
     "blouses": {
         "html_uid": "blouses",
         "name_sl": "Bluze",

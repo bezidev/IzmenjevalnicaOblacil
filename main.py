@@ -156,6 +156,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(send_mails_coroutine())
 
     # One-time migrations
+    """
     async with connection.begin() as session:
         products = (await session.execute(select(Product))).all()
         for product in products:
@@ -180,6 +181,7 @@ async def lifespan(app: FastAPI):
                 product.category = "dresses"
             if "shoes" in product.category:
                 product.category = "shoes"
+    """
     yield
     # Executed after end
 
@@ -485,6 +487,7 @@ async def home_post(
         sweater: bool = Form(False),
         cardigans: bool = Form(False),
         shirts: bool = Form(False),
+        dress_shirts: bool = Form(False),
         blouses: bool = Form(False),
         jacket: bool = Form(False),
         pants: bool = Form(False),
@@ -582,6 +585,8 @@ async def home_post(
         categories.append("cardigans")
     if shirts:
         categories.append("shirts")
+    if dress_shirts:
+        categories.append("dress_shirts")
     if blouses:
         categories.append("blouses")
     if jacket:
