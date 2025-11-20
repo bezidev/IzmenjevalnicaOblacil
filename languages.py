@@ -21,19 +21,19 @@ TRANSLATIONS: dict[str, dict] = {
     },
     "recently_changed": {
         "en": "Recently changed",
-        "sl": "Nedavno spremenjeno",
+        "sl": "Najnovejša sprememba",
     },
     "least_recently_changed": {
         "en": "Least recently changed",
-        "sl": "Najmanj nedavno spremenjeno"
+        "sl": "Najstarejša sprememba"
     },
     "recently_created": {
         "en": "Recently added",
-        "sl": "Nedavno dodano",
+        "sl": "Najnovejše dodano",
     },
     "least_recently_created": {
         "en": "Least recently added",
-        "sl": "Najmanj nedavno dodano",
+        "sl": "Najstarejše dodano",
     },
     "alphabetic_order": {
         "en": "Alphabetic order",
