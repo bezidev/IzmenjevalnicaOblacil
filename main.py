@@ -39,8 +39,6 @@ MICROSOFT_CLIENT_ID = os.environ["MICROSOFT_CLIENT_ID"]
 MICROSOFT_CLIENT_SECRET = os.environ["MICROSOFT_CLIENT_SECRET"]
 SCOPE = "https://graph.microsoft.com/User.Read https://graph.microsoft.com/User.ReadBasic.All"
 
-SEND_MAILS_PEOPLE = os.environ["SEND_MAILS_PEOPLE"].split(",")
-
 EMAIL_SERVER = os.environ["EMAIL_SERVER"]
 EMAIL_USERNAME = os.environ["EMAIL_USERNAME"]
 EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
@@ -108,22 +106,63 @@ async def send_mail():
         if len(products) == 0:
             return
         reservation = "Pozdravljeni!<p></p>Na izmenjevalnici oblačil so se pojavile naslednje nove rezervacije:<br>"
+        teacher_reservations = ""
+        has_normal_reservations = False
+        has_teacher_reservations = False
         for product in products:
             product = product[0]
             reserver = (await session.execute(select(User).filter_by(user_id=product.reserved_by_id))).one_or_none()
             reserver: User = reserver[0]
-            reservation += f'<b>{html.escape(reserver.first_name)} {html.escape(reserver.surname)}</b>: <a href="https://izmenjevalnica.gimb.org/item/{product.product_id}">{html.escape(product.name)}</a><br>'
-        reservation += '<p></p>Da pogledate vse rezervacije, se prijavite v portal in dostopajte do <a href="https://izmenjevalnica.gimb.org/admin/panel">administratorske plošče</a>.<br>'
-        reservation += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste označeni za pomembno osebo v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
-        message["From"] = EMAIL_USERNAME
-        message["To"] = ", ".join(SEND_MAILS_PEOPLE)
-        message["Date"] = formatdate(localtime=True)
-        message.attach(MIMEText(reservation, "html"))
-        with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
-            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_USERNAME, SEND_MAILS_PEOPLE, message.as_string())
+            res = f'<b>{html.escape(reserver.first_name)} {html.escape(reserver.surname)}</b>: <a href="https://izmenjevalnica.gimb.org/item/{product.product_id}">{html.escape(product.name)}</a><br>'
+            if reserver.is_teacher:
+                has_teacher_reservations = True
+                teacher_reservations += res
+            else:
+                has_normal_reservations = True
+                reservation += res
+        teacher_mail = reservation
+        if has_teacher_reservations:
+            teacher_mail += '<p><b>Rezervacije profesorjev:</b></p>'
+            teacher_mail += teacher_reservations
+
+        r = '<p></p>Da pogledate vse rezervacije, se prijavite v portal in dostopajte do <a href="https://izmenjevalnica.gimb.org/admin/panel">administratorske plošče</a>.<br>'
+        r += '<p></p>Lep pozdrav<br>Sistem izmenjevalnice oblačil<p></p><hr>To sporočilo je avtomatizirano. Prejemate ga, ker ste administrator v sistemu. Če mislite, da je to napaka, sporočite razvijalcu.<p></p>Uradna sporočila iz izmenjevalnice bodo vedno prihajala iz elektronskega naslova izmenjevalnica@beziapp.si. Če opazite drugačen naslov, prijavite incident razvijalcu na <a href="mailto:mitja.severkar@gimb.org">mitja.severkar@gimb.org</a>.<br>RAZVIJALEC VAS NIKOLI NE BO VPRAŠAL PO VAŠEM GESLU, NITI PO ELEKTRONSKI POŠTI NITI V ŽIVO.'
+
+        reservation += r
+        teacher_mail += r
+
+        admins = (await session.execute(select(User).filter_by(is_admin=True))).all()
+        teachers = []
+        peasants = []
+        for i in admins:
+            i: User = i[0]
+            if i.is_teacher:
+                teachers.append(i.email)
+            else:
+                peasants.append(i.email)
+
+        if has_normal_reservations:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
+            message["From"] = EMAIL_USERNAME
+            if not has_teacher_reservations:
+                peasants.extend(teachers)
+            message["To"] = ", ".join(peasants)
+            message["Date"] = formatdate(localtime=True)
+            message.attach(MIMEText(reservation, "html"))
+            with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
+                server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+                server.sendmail(EMAIL_USERNAME, peasants, message.as_string())
+        if has_teacher_reservations:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "Nove rezervacije na šolski izmenjevalnici oblačil"
+            message["From"] = EMAIL_USERNAME
+            message["To"] = ", ".join(teachers)
+            message["Date"] = formatdate(localtime=True)
+            message.attach(MIMEText(teacher_mail, "html"))
+            with smtplib.SMTP_SSL(EMAIL_SERVER, 465, context=context) as server:
+                server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+                server.sendmail(EMAIL_USERNAME, teachers, message.as_string())
         for product in products:
             product = product[0]
             product.reservation_mail_sent = True
